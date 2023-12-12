@@ -1,0 +1,1 @@
+odin run ./src -out:./bin/blocks.exe -debug
