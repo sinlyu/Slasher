@@ -29,7 +29,6 @@ main :: proc() {
 
 
     // Skeleton
-
     auto_register_assets(asset_ctx, "assets/enemy/skeleton/skeleton_default_walk/E")
     auto_register_assets(asset_ctx, "assets/enemy/skeleton/skeleton_default_walk/N")
     auto_register_assets(asset_ctx, "assets/enemy/skeleton/skeleton_default_walk/NE")
@@ -48,19 +47,12 @@ main :: proc() {
     auto_register_assets(asset_ctx, "assets/enemy/skeleton/skeleton_default_walk/W")
 
     InitWindow(width, height, "Slasher")
-    SetTargetFPS(60)
+    //SetTargetFPS()
 
     cursor:= make_cursor(entity_ctx, asset_ctx)
-    skeleton:= make_entity(entity_ctx)
 
-
-    load_many_sprites(asset_ctx, skeleton, "skeleton_default_walk_E_0.")
-    load_many_sprites(asset_ctx, skeleton, "skeleton_default_walk_N_90.")
-
-    add_and_load_sprite_collection(asset_ctx, skeleton, "skeleton_default_walk_E_0.")
-    debug_set_component(skeleton, Base_Texture, true)
-
-    skeleton.pos = pos_with_origin(skeleton, 400, 300)
+    load_many_sprites(asset_ctx, "skeleton_default_walk_E_0.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_N_90.")
 
     HideCursor()
     
@@ -68,23 +60,19 @@ main :: proc() {
     delta_time: f32 = 0.0
     
     for !WindowShouldClose() {
-        delta_time = GetFrameTime() * 1000
+        entity_ctx.delta_time = GetFrameTime() * 1000
 
         BeginDrawing()
         ClearBackground(RAYWHITE)
 
         update_cursor(cursor);
         
-        update_sprite_collection_system(entity_ctx)  
+        update_sprite_collection_system(entity_ctx)
         update_sprite_system(entity_ctx)      
+        update_health_system(entity_ctx)
 
-        if IsKeyPressed(KeyboardKey.LEFT) {
-            swap = !swap
-            if swap {
-                change_sprite_collection_items(skeleton, load_many_sprites(asset_ctx, skeleton, "skeleton_default_walk_N_90."))
-            } else {
-                change_sprite_collection_items(skeleton, load_many_sprites(asset_ctx, skeleton, "skeleton_default_walk_E_0."))
-            }
+        if IsMouseButtonPressed(MouseButton.LEFT) {
+            make_skeleton(entity_ctx, asset_ctx, cast(f32)GetMouseX(), cast(f32)GetMouseY())
         }
 
         // Debug info
@@ -100,7 +88,6 @@ main :: proc() {
             fmt.sbprintf(&mem_total_builder, "Mem: %v KB", mem_total / 1024)
             text:= strings.unsafe_string_to_cstring(strings.to_string(mem_total_builder))
             DrawText(text, 10, 10, 20, BLACK)
-
         
             // Draw delta time
             delta_time_builder := strings.builder_make()
@@ -109,14 +96,12 @@ main :: proc() {
             text = strings.unsafe_string_to_cstring(strings.to_string(delta_time_builder))
             DrawText(text, 10, 30, 20, BLACK)
 
-
             // Draw entity count
             entity_count_builder := strings.builder_make()
             defer strings.builder_destroy(&entity_count_builder)
             fmt.sbprintf(&entity_count_builder, "Ents: %v", len(entity_ctx.entities))
             text = strings.unsafe_string_to_cstring(strings.to_string(entity_count_builder))
             DrawText(text, 10, 50, 20, BLACK)
-
             
             // Draw asset count
             sprite_count_builder := strings.builder_make()
@@ -125,14 +110,12 @@ main :: proc() {
             text = strings.unsafe_string_to_cstring(strings.to_string(sprite_count_builder))
             DrawText(text, 10, 70, 20, BLACK)
 
-
             // Draw Texture Map cache count
             texture_cache_count_builder := strings.builder_make()
             defer strings.builder_destroy(&texture_cache_count_builder)
             fmt.sbprintf(&texture_cache_count_builder, "Tex Cache: %v", len(asset_ctx.texture_cache))
             text = strings.unsafe_string_to_cstring(strings.to_string(texture_cache_count_builder))
             DrawText(text, 10, 90, 20, BLACK)
-
 
             // Draw FPS
             fps_builder := strings.builder_make()
@@ -147,4 +130,20 @@ main :: proc() {
     
     mem.tracking_allocator_destroy(&track)
     CloseWindow()
+}
+
+make_skeleton :: proc(entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_Context, x: f32, y: f32) -> ^ecs.Entity {
+    using ecs
+    skeleton:= make_entity(entity_ctx)
+    health:= get_component(skeleton, Health)
+    transform:= get_component(skeleton, Transformation)
+
+    add_and_load_sprite_collection(asset_ctx, skeleton, "skeleton_default_walk_E_0.", 100)
+    
+    transform.pos = raylib.Vector2{x - transform.origin.x, y - transform.origin.y}
+
+    //ecs.debug_set_component(skeleton, ecs.Base_Texture, true)
+
+    
+    return skeleton
 }

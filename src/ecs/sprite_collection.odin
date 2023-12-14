@@ -9,10 +9,11 @@ Sprite_Collection :: struct {
     textures: [dynamic]^raylib.Texture2D,
     frame_index: i32,
     frame_count: i32,
-    frame_time: i32,
+    frame_time: f32,
+    current_time: f32,
 }
 
-add_and_load_sprite_collection :: proc(asset_ctx: ^asset.Asset_Context, entity: ^Entity, prefix: string) {
+add_and_load_sprite_collection :: proc(asset_ctx: ^asset.Asset_Context, entity: ^Entity, prefix: string, frame_time: f32 = 100) {
     using asset
     
     // Find all Assets with the prefix
@@ -25,6 +26,7 @@ add_and_load_sprite_collection :: proc(asset_ctx: ^asset.Asset_Context, entity: 
     // Each Sprite based component needs a Base_Texture
     texture := get_component(entity, Base_Texture)
     collection := get_component(entity, Sprite_Collection)
+    collection.frame_time = frame_time
 
     // Allocate the textures array
     collection.textures = make([dynamic]^raylib.Texture2D, len(filtered_assets))
@@ -33,22 +35,27 @@ add_and_load_sprite_collection :: proc(asset_ctx: ^asset.Asset_Context, entity: 
     // Load all the textures
     for i := 0; i < len(filtered_assets); i+=1 {
         asset := filtered_assets[i]
-        fmt.printf("Loading %s\n", asset.name)
         collection.textures[i] = load_asset(asset_ctx, asset.name, raylib.Texture2D)
     }
 
     // Set the Base_Texture to the first texture
     texture.texture = collection.textures[0]
+
+    // Update Transform origin
+    transform := get_component(entity, Transformation)
+    transform.origin = raylib.Vector2 {
+        cast(f32)texture.texture.width,
+        cast(f32)texture.texture.height,
+    }
 }
 
-load_many_sprites :: proc(asset_ctx: ^asset.Asset_Context, entity: ^Entity, prefix: string) -> [dynamic]^raylib.Texture2D {
+load_many_sprites :: proc(asset_ctx: ^asset.Asset_Context, prefix: string) -> [dynamic]^raylib.Texture2D {
     using asset
 
     // Check if we already have the textures loaded
     if asset_ctx.texture_cache[prefix] != nil {
         return asset_ctx.texture_cache[prefix]
     }
-
 
     textures := make([dynamic]^raylib.Texture2D)
 
@@ -61,7 +68,6 @@ load_many_sprites :: proc(asset_ctx: ^asset.Asset_Context, entity: ^Entity, pref
       // Load all the textures
     for i := 0; i < len(filtered_assets); i+=1 {
         asset := filtered_assets[i]
-        fmt.printf("Loading %s\n", asset.name)
         texture:= load_asset(asset_ctx, asset.name, raylib.Texture2D)
         append(&textures, texture)
     }
@@ -77,4 +83,6 @@ change_sprite_collection_items :: proc(entity: ^Entity, textures: [dynamic]^rayl
     collection.textures = textures
     collection.frame_count = cast(i32)len(textures)
     collection.frame_index = 0
+    collection.current_time = 0
+    collection.frame_time = 100
 }

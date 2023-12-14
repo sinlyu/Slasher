@@ -18,12 +18,12 @@ Entity_Context :: struct {
     entities: [dynamic]^Entity,
     components: map[typeid]map[Entity_Id]Component_Data,
     next_id: Entity_Id,
+    delta_time: f32,
 }
 
 Entity :: struct {
     id: Entity_Id,
     layer: Layers,
-    pos: raylib.Vector2,
     ctx: ^Entity_Context,
 }
 
@@ -52,6 +52,19 @@ Base_Texture :: struct {
     texture: ^raylib.Texture2D,
 }
 
+Hitbox :: struct {
+    using base: Component,
+    width: f32,
+    height: f32,
+}
+
+Transformation :: struct {
+    using base: Component,
+    pos: raylib.Vector2,
+    origin: raylib.Vector2,
+    rotation: f32,
+}
+
 init_entity_context :: proc() -> ^Entity_Context {
     entity_context, err := new(Entity_Context)
     return entity_context
@@ -60,10 +73,13 @@ init_entity_context :: proc() -> ^Entity_Context {
 make_entity :: proc(ctx: ^Entity_Context, layer: Layers = Layers.World) -> ^Entity {
     entity:= new(Entity)
     entity.id = ctx.next_id
-    entity.pos = raylib.Vector2{ 0, 0 }
     entity.ctx = ctx
     entity.layer = layer // Default layer
     ctx.next_id += 1
+
+    // Add the default components
+    transform := get_component(entity, Transformation)
+
     append(&ctx.entities, entity)
 
     // We need to sort the entities by layer when we add a new one
@@ -72,10 +88,16 @@ make_entity :: proc(ctx: ^Entity_Context, layer: Layers = Layers.World) -> ^Enti
     return entity
 }
 
+make_hitbox :: proc(entity: ^Entity, width: f32, height: f32) {
+    hitbox := new(Hitbox)
+    hitbox.width = width
+    hitbox.height = height
+    add_component(entity, Hitbox)
+}
+
 sort_entites :: proc(ctx: ^Entity_Context) {
     using mem
     slice.sort_by(ctx.entities[:], proc(a, b: ^Entity) -> bool {
-        fmt.printf("######## a: %d, b: %d\n", a.layer, b.layer)
         return a.layer > b.layer
     })
 }
@@ -120,9 +142,6 @@ has_component :: proc(entity: ^Entity, $T: typeid) -> bool {
     return T in entity.ctx.components && entity.id in entity.ctx.components[T]
 }
 
-
-
-
 // Helper procs based on components
 
 comp_width :: proc(entity: ^Entity) -> f32 {
@@ -145,12 +164,6 @@ comp_height :: proc(entity: ^Entity) -> f32 {
     return helper.tex_height(base_texture.texture)
 
     // TODO: Add a BoundingBox component
-}
-
-pos_with_origin :: proc(entity: ^Entity, x: f32, y: f32) -> raylib.Vector2 {
-    width := comp_width(entity)
-    height := comp_height(entity)
-    return raylib.Vector2{ x - width / 2, y - height / 2 }
 }
 
 try_get_texture :: proc(entity: ^Entity) -> (bool, ^raylib.Texture2D) {

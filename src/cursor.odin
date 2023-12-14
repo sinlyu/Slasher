@@ -29,8 +29,9 @@ update_cursor :: proc (cursor: ^ecs.Entity)
     mouse_pos:= GetMousePosition()
     
     base_texture := get_component(cursor, Base_Texture)
+    transform := get_component(cursor, Transformation)
     texture := base_texture.texture
 
-    cursor.pos.x = mouse_pos.x - tex_width(texture) / 2
-    cursor.pos.y = mouse_pos.y - tex_height(texture) / 2
+    transform.pos.x = mouse_pos.x - tex_width(texture) / 2
+    transform.pos.y = mouse_pos.y - tex_height(texture) / 2
 } 

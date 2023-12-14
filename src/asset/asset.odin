@@ -135,7 +135,6 @@ load_asset :: proc(ctx: ^Asset_Context, name: string, $T: typeid) -> ^T {
 
     // If the asset is already loaded, we take the fast path
     if(asset.loaded) {
-        fmt.println("Asset already loaded: ", asset.path)
         return cast(^T)&asset.data
     }
 
@@ -159,7 +158,6 @@ filter_assets :: proc(ctx: ^Asset_Context, asset_type: Asset_Type, query: string
 }
 
 load_image_asset :: proc(asset: ^Asset) -> raylib.Texture2D {
-    fmt.println("Loading image asset: ", asset.path)
     texture := raylib.LoadTexture(strings.unsafe_string_to_cstring(asset.path))
     asset.loaded = true
     return texture

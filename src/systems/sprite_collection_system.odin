@@ -8,6 +8,9 @@ import "../helper"
 update_sprite_collection_system :: proc(ctx: ^ecs.Entity_Context) {
     using ecs
     
+    size:= len(ctx.components[Sprite_Collection])
+    if size == 0 { return }
+
     for entity_id, component_data in ctx.components[Sprite_Collection] {
         sprite_collection:= cast(^Sprite_Collection)component_data.data
         update_sprite_collection(ctx, sprite_collection)
@@ -27,11 +30,9 @@ update_sprite_collection :: proc(ctx: ^ecs.Entity_Context, sprite_collection: ^e
         panic("Sprite_Collection must have a Base_Texture")
     }
 
-  // Update timing
-    // TODO: refactor with delta time
-    sprite_collection.frame_time += 1
-    if(sprite_collection.frame_time >= 4) {
-        sprite_collection.frame_time = 0
+    sprite_collection.current_time += ctx.delta_time
+    if(sprite_collection.current_time >= sprite_collection.frame_time) {
+        sprite_collection.current_time = 0
         sprite_collection.frame_index += 1
         if(sprite_collection.frame_index >= sprite_collection.frame_count) {
             sprite_collection.frame_index = 0
