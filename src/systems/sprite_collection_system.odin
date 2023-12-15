@@ -8,8 +8,7 @@ import "../helper"
 update_sprite_collection_system :: proc(ctx: ^ecs.Entity_Context) {
     using ecs
     
-    size:= len(ctx.components[Sprite_Collection])
-    if size == 0 { return }
+    if len(ctx.components[Sprite_Collection]) == 0 { return }
 
     for entity_id, component_data in ctx.components[Sprite_Collection] {
         sprite_collection:= cast(^Sprite_Collection)component_data.data

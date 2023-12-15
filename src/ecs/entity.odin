@@ -65,6 +65,17 @@ Transformation :: struct {
     rotation: f32,
 }
 
+Cooldowns :: struct {
+    using base: Component,
+    cooldowns: map[string]Cooldown,
+}
+
+Cooldown :: struct {
+    name: string,
+    time: f64,
+    last_used: f64,
+}
+
 init_entity_context :: proc() -> ^Entity_Context {
     entity_context, err := new(Entity_Context)
     return entity_context
@@ -171,4 +182,41 @@ try_get_texture :: proc(entity: ^Entity) -> (bool, ^raylib.Texture2D) {
         return false, nil
     }
     return true, get_component(entity, Base_Texture).texture
+}
+
+make_cooldowns :: proc(entity: ^Entity) -> ^Cooldowns {
+    cooldowns := get_component(entity, Cooldowns)
+    cooldowns.cooldowns = make(map[string]Cooldown)
+    return cooldowns
+}
+
+add_cooldown :: proc(entity: ^Entity, name: string, time: f64) {
+    if !has_component(entity, Cooldowns) {
+        panic("Entity does not have a Cooldowns component")
+    }
+
+    cooldowns := get_component(entity, Cooldowns)
+    cooldowns.cooldowns[name] = Cooldown{name, time, 0}
+}
+
+cooldown_use :: proc(entity: ^Entity, name: string) -> bool {
+    if !has_component(entity, Cooldowns) {
+        panic("Entity does not have a Cooldowns component")
+    }
+
+    cooldowns := get_component(entity, Cooldowns)
+    if !(name in cooldowns.cooldowns) {
+        panic("Entity does not have that cooldown")
+    }
+
+    cooldown := &cooldowns.cooldowns[name]
+    time := raylib.GetTime()
+
+    if time - cooldown.last_used < cooldown.time {
+        return false
+    }
+
+    cooldown.last_used = time
+
+    return true
 }

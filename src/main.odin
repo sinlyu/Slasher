@@ -134,12 +134,18 @@ main :: proc() {
 
 make_skeleton :: proc(entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_Context, x: f32, y: f32) -> ^ecs.Entity {
     using ecs
+    
     skeleton:= make_entity(entity_ctx)
     health:= get_component(skeleton, Health)
-    transform:= get_component(skeleton, Transformation)
+    cooldowns:= make_cooldowns(skeleton)
+    add_cooldown(skeleton, "test", 0.1)
 
+    health.max_health = 100
+    health.health = 100
+
+
+    transform:= get_component(skeleton, Transformation)
     add_and_load_sprite_collection(asset_ctx, skeleton, "skeleton_default_walk_E_0.", 100)
-    
     transform.pos = raylib.Vector2{x - transform.origin.x, y - transform.origin.y}
 
     //ecs.debug_set_component(skeleton, ecs.Base_Texture, true)
