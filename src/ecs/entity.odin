@@ -76,6 +76,15 @@ Cooldown :: struct {
     last_used: f64,
 }
 
+Physics :: struct {
+    using base: Component,
+    velocity: raylib.Vector2,
+    max_velocity: raylib.Vector2,
+    acceleration: raylib.Vector2,
+    friction: f32,
+}
+
+
 init_entity_context :: proc() -> ^Entity_Context {
     entity_context, err := new(Entity_Context)
     return entity_context
@@ -97,6 +106,11 @@ make_entity :: proc(ctx: ^Entity_Context, layer: Layers = Layers.World) -> ^Enti
     sort_entites(ctx)
 
     return entity
+}
+
+free_entity :: proc(entity: ^Entity) {
+    // TODO: Free all components
+    // TODO: Remove from the entities slice
 }
 
 make_hitbox :: proc(entity: ^Entity, width: f32, height: f32) {
@@ -219,4 +233,32 @@ cooldown_use :: proc(entity: ^Entity, name: string) -> bool {
     cooldown.last_used = time
 
     return true
+}
+
+physics_apply_force :: proc(entity: ^Entity, force: raylib.Vector2) {
+    if !has_component(entity, Physics) {
+        panic("Entity does not have a Physics component")
+    }
+
+    physics := get_component(entity, Physics)
+    physics.acceleration = vec2_add(physics.acceleration, force)
+}
+
+physics_apply_friction :: proc(entity: ^Entity) {
+    if !has_component(entity, Physics) {
+        panic("Entity does not have a Physics component")
+    }
+
+    physics := get_component(entity, Physics)
+    physics.velocity = vec2_mul(physics.velocity, physics.friction)
+}
+
+
+// Vector2 procs
+vec2_add :: proc(a, b: raylib.Vector2) -> raylib.Vector2 {
+    return raylib.Vector2{a.x + b.x, a.y + b.y}
+}
+
+vec2_mul :: proc(a: raylib.Vector2, b: f32) -> raylib.Vector2 {
+    return raylib.Vector2{a.x * b, a.y * b}
 }

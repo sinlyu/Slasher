@@ -27,7 +27,6 @@ main :: proc() {
 
     register_asset(asset_ctx, "cursor_gauntlet_white", "assets/user_interface/cursor/cursor_gauntlet_white.png")
 
-
     // Skeleton
     auto_register_assets(asset_ctx, "assets/enemy/skeleton/skeleton_default_walk/E")
     auto_register_assets(asset_ctx, "assets/enemy/skeleton/skeleton_default_walk/N")
@@ -47,7 +46,7 @@ main :: proc() {
     auto_register_assets(asset_ctx, "assets/enemy/skeleton/skeleton_default_walk/W")
 
     InitWindow(width, height, "Slasher")
-    //SetTargetFPS()
+    SetTargetFPS(60)
 
     cursor:= make_cursor(entity_ctx, asset_ctx)
 
@@ -70,6 +69,7 @@ main :: proc() {
         update_sprite_collection_system(entity_ctx)
         update_sprite_system(entity_ctx)      
         update_health_system(entity_ctx)
+        update_physics_system(entity_ctx)
 
         if IsMouseButtonPressed(MouseButton.LEFT) {
             make_skeleton(entity_ctx, asset_ctx, cast(f32)GetMouseX(), cast(f32)GetMouseY())
@@ -143,13 +143,16 @@ make_skeleton :: proc(entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_C
     health.max_health = 100
     health.health = 100
 
-
     transform:= get_component(skeleton, Transformation)
     add_and_load_sprite_collection(asset_ctx, skeleton, "skeleton_default_walk_E_0.", 100)
-    transform.pos = raylib.Vector2{x - transform.origin.x, y - transform.origin.y}
+    transform.pos = raylib.Vector2{ x - transform.origin.x, y - transform.origin.y }
+
+    physics:= get_component(skeleton, Physics)
+    physics.velocity = raylib.Vector2{ 10, 0 }
+    physics.max_velocity = raylib.Vector2{ 10, 0 }
+    physics.acceleration = raylib.Vector2{ 1000, 0 }
+    physics.friction = 1
 
     //ecs.debug_set_component(skeleton, ecs.Base_Texture, true)
-
-    
     return skeleton
 }
