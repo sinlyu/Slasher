@@ -63,8 +63,6 @@ main :: proc() {
 
         BeginDrawing()
         ClearBackground(RAYWHITE)
-
-        update_cursor(cursor);
         
         update_sprite_collection_system(entity_ctx)
         update_sprite_system(entity_ctx)      
@@ -125,6 +123,9 @@ main :: proc() {
             DrawText(text, 10, 110, 20, BLACK)
         }
 
+        update_cursor(cursor);
+
+        
         EndDrawing()
     }
     
@@ -148,9 +149,10 @@ make_skeleton :: proc(entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_C
     transform.pos = raylib.Vector2{ x - transform.origin.x, y - transform.origin.y }
 
     physics:= get_component(skeleton, Physics)
-    physics.velocity = raylib.Vector2{ 10, 0 }
-    physics.max_velocity = raylib.Vector2{ 10, 0 }
-    physics.acceleration = raylib.Vector2{ 1000, 0 }
+
+    physics.velocity = vec2_rnd()
+    physics.max_velocity = vec2_rnd()
+    physics.acceleration = vec2_rnd(100)
     physics.friction = 1
 
     //ecs.debug_set_component(skeleton, ecs.Base_Texture, true)

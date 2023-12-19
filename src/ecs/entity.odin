@@ -4,6 +4,8 @@ import "core:mem"
 import "core:runtime"
 import "core:fmt"
 import "core:slice"
+import "core:math"
+import "core:math/rand"
 import "vendor:raylib"
 import "../helper"
 
@@ -261,4 +263,16 @@ vec2_add :: proc(a, b: raylib.Vector2) -> raylib.Vector2 {
 
 vec2_mul :: proc(a: raylib.Vector2, b: f32) -> raylib.Vector2 {
     return raylib.Vector2{a.x * b, a.y * b}
+}
+
+vec2_dir :: proc(a: raylib.Vector2) -> raylib.Vector2 {
+    magnitude := math.sqrt(a.x * a.x + a.y * a.y)
+
+    return raylib.Vector2{a.x / magnitude, a.y / magnitude}
+}
+
+vec2_rnd :: proc(max: f32 = 10) -> raylib.Vector2 {
+    x:= rand.float32() * max
+    y:= rand.float32() * max
+    return raylib.Vector2{x, y}
 }

@@ -29,4 +29,10 @@ update_physics :: proc(ctx: ^ecs.Entity_Context, physics: ^ecs.Physics) {
     physics.velocity = physics.velocity + physics.acceleration * delta_time
     physics.velocity = physics.velocity * physics.friction
     transform.pos = transform.pos + physics.velocity * delta_time
+
+    // calc direction
+    dir := vec2_dir(physics.velocity)
+
+    // draw dir debug helper line
+    raylib.DrawLineEx(transform.pos + transform.origin, transform.pos + transform.origin + dir * 100, 2, raylib.RED)
 }
