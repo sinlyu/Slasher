@@ -8,6 +8,7 @@ import "core:math"
 import "core:math/rand"
 import "vendor:raylib"
 import "../helper"
+import "../asset"
 
 Entity_Id :: i32
 
@@ -21,6 +22,7 @@ Entity_Context :: struct {
     components: map[typeid]map[Entity_Id]Component_Data,
     next_id: Entity_Id,
     delta_time: f32,
+    asset_ctx: ^asset.Asset_Context,
 }
 
 Entity :: struct {
@@ -84,6 +86,9 @@ Physics :: struct {
     max_velocity: raylib.Vector2,
     acceleration: raylib.Vector2,
     friction: f32,
+    
+    fixed_angle: f32,
+    angle: f32,
 }
 
 
@@ -275,4 +280,8 @@ vec2_rnd :: proc(max: f32 = 10) -> raylib.Vector2 {
     x:= rand.float32() * max
     y:= rand.float32() * max
     return raylib.Vector2{x, y}
+}
+
+vec2_angle :: proc(dir: raylib.Vector2) -> f32 {
+    return math.atan2(dir.y, dir.x)
 }

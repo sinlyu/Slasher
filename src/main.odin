@@ -25,6 +25,9 @@ main :: proc() {
     entity_ctx: ^Entity_Context = init_entity_context()
     asset_ctx: ^Asset_Context = init_asset_context()
 
+    // TODO: Create Game_Context instead of passing these around
+    entity_ctx.asset_ctx = asset_ctx
+
     register_asset(asset_ctx, "cursor_gauntlet_white", "assets/user_interface/cursor/cursor_gauntlet_white.png")
 
     // Skeleton

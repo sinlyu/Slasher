@@ -52,6 +52,8 @@ add_and_load_sprite_collection :: proc(asset_ctx: ^asset.Asset_Context, entity: 
 load_many_sprites :: proc(asset_ctx: ^asset.Asset_Context, prefix: string) -> [dynamic]^raylib.Texture2D {
     using asset
 
+    fmt.println("Loading sprites: ", prefix)
+
     // Check if we already have the textures loaded
     if asset_ctx.texture_cache[prefix] != nil {
         return asset_ctx.texture_cache[prefix]
