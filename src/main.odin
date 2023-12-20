@@ -60,6 +60,8 @@ main :: proc() {
     
     swap: bool = false
     delta_time: f32 = 0.0
+
+    entity: ^Entity;
     
     for !WindowShouldClose() {
         entity_ctx.delta_time = GetFrameTime() * 1000
@@ -73,7 +75,30 @@ main :: proc() {
         update_physics_system(entity_ctx)
 
         if IsMouseButtonPressed(MouseButton.LEFT) {
-            make_skeleton(entity_ctx, asset_ctx, cast(f32)GetMouseX(), cast(f32)GetMouseY())
+            entity = make_skeleton(entity_ctx, asset_ctx, cast(f32)GetMouseX(), cast(f32)GetMouseY())
+        }
+
+        // Whack entity
+        if IsMouseButtonPressed(MouseButton.RIGHT) {
+            if entity != nil {
+                physics_apply_force(entity, vec2_rnd(5000))
+            }
+        }
+
+        if IsKeyDown(KeyboardKey.LEFT) {
+            physics_set_force(entity, raylib.Vector2{ -10, 0 })
+        }
+
+        if IsKeyDown(KeyboardKey.RIGHT) {
+            physics_set_force(entity, raylib.Vector2{ 10, 0 })
+        }
+
+        if IsKeyDown(KeyboardKey.UP) {
+            physics_set_force(entity, raylib.Vector2{ 0, -10 })
+        }
+
+        if IsKeyDown(KeyboardKey.DOWN) {
+            physics_set_force(entity, raylib.Vector2{ 0, 10 })
         }
 
         // Debug info
@@ -153,10 +178,11 @@ make_skeleton :: proc(entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_C
 
     physics:= get_component(skeleton, Physics)
 
-    physics.velocity = vec2_rnd()
-    physics.max_velocity = vec2_rnd()
-    physics.acceleration = vec2_rnd(100)
-    physics.friction = 1
+    physics.velocity = vec2_zero()
+    physics.max_velocity = 100
+    physics.acceleration = vec2_zero()
+    physics.friction = 0.99
+    physics.mass = 2
 
     //ecs.debug_set_component(skeleton, ecs.Base_Texture, true)
     return skeleton

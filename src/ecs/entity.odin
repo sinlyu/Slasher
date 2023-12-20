@@ -83,9 +83,10 @@ Cooldown :: struct {
 Physics :: struct {
     using base: Component,
     velocity: raylib.Vector2,
-    max_velocity: raylib.Vector2,
+    max_velocity: f32,
     acceleration: raylib.Vector2,
     friction: f32,
+    mass: f32,
     
     fixed_angle: f32,
     angle: f32,
@@ -251,6 +252,15 @@ physics_apply_force :: proc(entity: ^Entity, force: raylib.Vector2) {
     physics.acceleration = vec2_add(physics.acceleration, force)
 }
 
+physics_set_force :: proc(entity: ^Entity, force: raylib.Vector2) {
+    if !has_component(entity, Physics) {
+        panic("Entity does not have a Physics component")
+    }
+
+    physics := get_component(entity, Physics)
+    physics.acceleration = force
+}
+
 physics_apply_friction :: proc(entity: ^Entity) {
     if !has_component(entity, Physics) {
         panic("Entity does not have a Physics component")
@@ -284,4 +294,8 @@ vec2_rnd :: proc(max: f32 = 10) -> raylib.Vector2 {
 
 vec2_angle :: proc(dir: raylib.Vector2) -> f32 {
     return math.atan2(dir.y, dir.x)
+}
+
+vec2_zero :: proc() -> raylib.Vector2 {
+    return raylib.Vector2{0, 0}
 }

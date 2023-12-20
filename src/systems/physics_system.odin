@@ -25,12 +25,17 @@ update_physics :: proc(ctx: ^ecs.Entity_Context, physics: ^ecs.Physics) {
     transform := get_component(entity, Transformation)
     if transform == nil { panic("Physics component without Transform") }
 
-    delta_time := ctx.delta_time / 1000
+    delta_time := ctx.delta_time / 100
+
+    real_acceleration := physics.acceleration / physics.mass
 
     // Apply velocity and acceleration and friction to position
-    physics.velocity = physics.velocity + physics.acceleration * delta_time
+    physics.velocity = physics.velocity + real_acceleration * delta_time
     physics.velocity = physics.velocity * physics.friction
     transform.pos = transform.pos + physics.velocity * delta_time
+
+    physics.acceleration = vec2_zero()
+
 
     // calc direction
     dir := vec2_dir(physics.velocity)
@@ -40,7 +45,7 @@ update_physics :: proc(ctx: ^ecs.Entity_Context, physics: ^ecs.Physics) {
     angle := vec2_angle(transform.pos + dir)
 
     // angle to degrees
-    deg := angle * 180 / math.PI
+    deg := angle * 180 / math.PI    
 
     // determine animation frame (E, N, NE, NEE, NNE, NNW, NW, NWW, S, SE, SEE, SSE, SW, SWW, SSW, W)
     // find the best match
@@ -69,8 +74,20 @@ update_physics :: proc(ctx: ^ecs.Entity_Context, physics: ^ecs.Physics) {
             sb := strings.builder_make()
             defer strings.builder_destroy(&sb)
             fmt.sbprintf(&sb, "skeleton_default_walk_%s_%v.", best_frame_name, cast(i32)best_match_angle)
-
             change_sprite_collection_items(entity, load_many_sprites(ctx.asset_ctx, strings.to_string(sb)))
         }
     }
+
+    entity_pos := transform.pos + transform.origin
+
+
+    screen_width:= cast(f32)raylib.GetScreenWidth()
+    screen_height:= cast(f32)raylib.GetScreenHeight()
+
+    // Check if entity is off screen and wrap it around
+    if entity_pos.x < 0 { transform.pos.x = transform.pos.x + transform.origin.x - screen_width }
+    if entity_pos.x > screen_width { transform.pos.x = -transform.origin.x }
+    if entity_pos.y < 0 { transform.pos.y = screen_height + transform.origin.y }
+    if entity_pos.y > screen_height { transform.pos.y = -transform.origin.y }
+
 }
