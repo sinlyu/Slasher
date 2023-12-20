@@ -59,6 +59,9 @@ load_many_sprites :: proc(asset_ctx: ^asset.Asset_Context, prefix: string) -> [d
         return asset_ctx.texture_cache[prefix]
     }
 
+    fmt.println(asset_ctx.texture_cache[prefix])
+    fmt.println("Textures not cached, loading...")
+
     textures := make([dynamic]^raylib.Texture2D)
 
      // Find all Assets with the prefix
@@ -84,7 +87,7 @@ change_sprite_collection_items :: proc(entity: ^Entity, textures: [dynamic]^rayl
     collection := get_component(entity, Sprite_Collection)
     collection.textures = textures
     collection.frame_count = cast(i32)len(textures)
-    collection.frame_index = 0
-    collection.current_time = 0
     collection.frame_time = 100
+
+    // TODO: Check if we have the same amount of textures / frame count
 }

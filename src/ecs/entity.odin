@@ -21,8 +21,7 @@ Entity_Context :: struct {
     entities: [dynamic]^Entity,
     components: map[typeid]map[Entity_Id]Component_Data,
     next_id: Entity_Id,
-    delta_time: f32,
-    asset_ctx: ^asset.Asset_Context,
+    delta_time: f32
 }
 
 Entity :: struct {
@@ -93,8 +92,8 @@ Physics :: struct {
 }
 
 
-init_entity_context :: proc() -> ^Entity_Context {
-    entity_context, err := new(Entity_Context)
+init_entity_context :: proc() -> Entity_Context {
+    entity_context := Entity_Context{}
     return entity_context
 }
 
@@ -258,7 +257,7 @@ physics_set_force :: proc(entity: ^Entity, force: raylib.Vector2) {
     }
 
     physics := get_component(entity, Physics)
-    physics.acceleration = force
+    physics.acceleration = force * entity.ctx.delta_time
 }
 
 physics_apply_friction :: proc(entity: ^Entity) {

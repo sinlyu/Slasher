@@ -7,13 +7,14 @@ import "vendor:raylib"
 import "ecs"
 import "systems"
 import "asset"
+import "drawing"
+import "engine"
 
 main :: proc() {
     using raylib
     using ecs
     using systems
     using asset
-
 
     track: mem.Tracking_Allocator
     mem.tracking_allocator_init(&track, context.allocator)
@@ -22,11 +23,10 @@ main :: proc() {
     width: i32 = 800
     height: i32 = 600
 
-    entity_ctx: ^Entity_Context = init_entity_context()
-    asset_ctx: ^Asset_Context = init_asset_context()
+    game_ctx:= engine.init_game_context()
 
-    // TODO: Create Game_Context instead of passing these around
-    entity_ctx.asset_ctx = asset_ctx
+    asset_ctx := &game_ctx.asset_ctx
+    entity_ctx := &game_ctx.entity_ctx
 
     register_asset(asset_ctx, "cursor_gauntlet_white", "assets/user_interface/cursor/cursor_gauntlet_white.png")
 
@@ -49,12 +49,13 @@ main :: proc() {
     auto_register_assets(asset_ctx, "assets/enemy/skeleton/skeleton_default_walk/W")
 
     InitWindow(width, height, "Slasher")
-    SetTargetFPS(60)
 
     cursor:= make_cursor(entity_ctx, asset_ctx)
 
     load_many_sprites(asset_ctx, "skeleton_default_walk_E_0.")
     load_many_sprites(asset_ctx, "skeleton_default_walk_N_90.")
+
+    SetTargetFPS(60)
 
     HideCursor()
     
@@ -72,7 +73,7 @@ main :: proc() {
         update_sprite_collection_system(entity_ctx)
         update_sprite_system(entity_ctx)      
         update_health_system(entity_ctx)
-        update_physics_system(entity_ctx)
+        update_physics_system(&game_ctx)
 
         if IsMouseButtonPressed(MouseButton.LEFT) {
             entity = make_skeleton(entity_ctx, asset_ctx, cast(f32)GetMouseX(), cast(f32)GetMouseY())
@@ -109,46 +110,49 @@ main :: proc() {
                 mem_total += entry.size
             }
 
-            mem_total_builder := strings.builder_make()
-            defer strings.builder_destroy(&mem_total_builder)
-            fmt.sbprintf(&mem_total_builder, "Mem: %v KB", mem_total / 1024)
-            text:= strings.unsafe_string_to_cstring(strings.to_string(mem_total_builder))
+            builder := strings.builder_make()
+
+            strings.builder_reset(&builder)
+            fmt.sbprintf(&builder, "Mem: %v KB", mem_total / 1024)
+            text:= strings.unsafe_string_to_cstring(strings.to_string(builder))
             DrawText(text, 10, 10, 20, BLACK)
+            strings.builder_destroy(&builder)
         
             // Draw delta time
-            delta_time_builder := strings.builder_make()
-            defer strings.builder_destroy(&delta_time_builder)
-            fmt.sbprintf(&delta_time_builder, "Delta: %v", delta_time)
-            text = strings.unsafe_string_to_cstring(strings.to_string(delta_time_builder))
+            strings.builder_reset(&builder)
+            fmt.sbprintf(&builder, "Delta: %v", delta_time)
+            text = strings.unsafe_string_to_cstring(strings.to_string(builder))
             DrawText(text, 10, 30, 20, BLACK)
+            strings.builder_destroy(&builder)
 
             // Draw entity count
-            entity_count_builder := strings.builder_make()
-            defer strings.builder_destroy(&entity_count_builder)
-            fmt.sbprintf(&entity_count_builder, "Ents: %v", len(entity_ctx.entities))
-            text = strings.unsafe_string_to_cstring(strings.to_string(entity_count_builder))
+            strings.builder_reset(&builder)
+            fmt.sbprintf(&builder, "Ents: %v", len(entity_ctx.entities))
+            text = strings.unsafe_string_to_cstring(strings.to_string(builder))
             DrawText(text, 10, 50, 20, BLACK)
+            strings.builder_destroy(&builder)
             
             // Draw asset count
-            sprite_count_builder := strings.builder_make()
-            defer strings.builder_destroy(&sprite_count_builder)
-            fmt.sbprintf(&sprite_count_builder, "Assets: %v", len(asset_ctx.assets))
-            text = strings.unsafe_string_to_cstring(strings.to_string(sprite_count_builder))
+            strings.builder_reset(&builder)
+            fmt.sbprintf(&builder, "Assets: %v", len(asset_ctx.assets))
+            text = strings.unsafe_string_to_cstring(strings.to_string(builder))
             DrawText(text, 10, 70, 20, BLACK)
+            strings.builder_destroy(&builder)
 
             // Draw Texture Map cache count
-            texture_cache_count_builder := strings.builder_make()
-            defer strings.builder_destroy(&texture_cache_count_builder)
-            fmt.sbprintf(&texture_cache_count_builder, "Tex Cache: %v", len(asset_ctx.texture_cache))
-            text = strings.unsafe_string_to_cstring(strings.to_string(texture_cache_count_builder))
+            strings.builder_reset(&builder)
+            fmt.sbprintf(&builder, "Tex Cache: %v", len(asset_ctx.texture_cache))
+            text = strings.unsafe_string_to_cstring(strings.to_string(builder))
             DrawText(text, 10, 90, 20, BLACK)
+            strings.builder_destroy(&builder)
 
             // Draw FPS
-            fps_builder := strings.builder_make()
-            defer strings.builder_destroy(&fps_builder)
-            fmt.sbprintf(&fps_builder, "FPS: %v", GetFPS())
-            text = strings.unsafe_string_to_cstring(strings.to_string(fps_builder))
+            strings.builder_reset(&builder)
+            fmt.sbprintf(&builder, "FPS: %v", GetFPS())
+            text = strings.unsafe_string_to_cstring(strings.to_string(builder))
             DrawText(text, 10, 110, 20, BLACK)
+            strings.builder_destroy(&builder)
+
         }
 
         update_cursor(cursor);
@@ -181,8 +185,8 @@ make_skeleton :: proc(entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_C
     physics.velocity = vec2_zero()
     physics.max_velocity = 100
     physics.acceleration = vec2_zero()
-    physics.friction = 0.99
-    physics.mass = 2
+    physics.friction = 0.9
+    physics.mass = 100
 
     //ecs.debug_set_component(skeleton, ecs.Base_Texture, true)
     return skeleton

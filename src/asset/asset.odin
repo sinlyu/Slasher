@@ -33,11 +33,12 @@ Asset_Type_Register :: struct {
     load_callback: proc(asset: ^Asset) -> runtime.Raw_Any
 }
 
-init_asset_context :: proc() -> ^Asset_Context {
-    asset_context, err := new(Asset_Context)
+init_asset_context :: proc() -> Asset_Context {
+    asset_context:= Asset_Context{}
     asset_context.assets = make(map[string]^Asset)
+    asset_context.texture_cache = make(map[string][dynamic]^raylib.Texture2D)
 
-    register_asset_types(asset_context)
+    register_asset_types(&asset_context)
     
     return asset_context
 }
