@@ -76,30 +76,42 @@ main :: proc() {
         update_physics_system(&game_ctx)
 
         if IsMouseButtonPressed(MouseButton.LEFT) {
+            if(entity != nil) {
+                free_entity(entity)
+            }
+
             entity = make_skeleton(entity_ctx, asset_ctx, cast(f32)GetMouseX(), cast(f32)GetMouseY())
         }
 
-        // Whack entity
         if IsMouseButtonPressed(MouseButton.RIGHT) {
             if entity != nil {
-                physics_apply_force(entity, vec2_rnd(5000))
+                // Whack entity randomly
+                physics_apply_force(entity, vec2_rnd(500000))
             }
         }
 
         if IsKeyDown(KeyboardKey.LEFT) {
-            physics_set_force(entity, raylib.Vector2{ -10, 0 })
+            if entity != nil {
+                physics_set_force(entity, raylib.Vector2{ -10, 0 })
+            }
         }
 
         if IsKeyDown(KeyboardKey.RIGHT) {
-            physics_set_force(entity, raylib.Vector2{ 10, 0 })
+            if entity != nil {
+                physics_set_force(entity, raylib.Vector2{ 10, 0 })
+            }
         }
 
         if IsKeyDown(KeyboardKey.UP) {
-            physics_set_force(entity, raylib.Vector2{ 0, -10 })
+            if entity != nil {
+                physics_set_force(entity, raylib.Vector2{ 0, -10 })
+            }
         }
 
         if IsKeyDown(KeyboardKey.DOWN) {
-            physics_set_force(entity, raylib.Vector2{ 0, 10 })
+            if entity != nil {
+                physics_set_force(entity, raylib.Vector2{ 0, 10 })
+            }
         }
 
         // Debug info
@@ -152,7 +164,6 @@ main :: proc() {
             text = strings.unsafe_string_to_cstring(strings.to_string(builder))
             DrawText(text, 10, 110, 20, BLACK)
             strings.builder_destroy(&builder)
-
         }
 
         update_cursor(cursor);

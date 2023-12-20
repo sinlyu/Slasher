@@ -116,9 +116,31 @@ make_entity :: proc(ctx: ^Entity_Context, layer: Layers = Layers.World) -> ^Enti
 }
 
 free_entity :: proc(entity: ^Entity) {
-    // TODO: Free all components
-    // TODO: Remove from the entities slice
+    for type in entity.ctx.components {
+       if entity.id in entity.ctx.components[type] {
+            key, value:= delete_key(&entity.ctx.components[type], entity.id)
+            free(value.data)
+        }
+    }
+
+    // find index of entity in entities
+    entity_index := -1
+    for e, i in entity.ctx.entities {
+        if e.id == entity.id {
+            entity_index = i
+            break
+        }
+    }
+
+    if entity_index == -1 {
+        panic("Entity not found in entities slice")
+    }
+
+    // Remove from entites
+    ordered_remove(&entity.ctx.entities, entity_index)
+    free(entity)
 }
+
 
 make_hitbox :: proc(entity: ^Entity, width: f32, height: f32) {
     hitbox := new(Hitbox)
