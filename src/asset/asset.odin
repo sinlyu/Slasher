@@ -83,6 +83,7 @@ register_asset :: proc (ctx: ^Asset_Context, name: string, path: string) -> ^Ass
 
 auto_register_assets :: proc(ctx: ^Asset_Context, path: string) {
     fd, err := os.open(path, os.O_RDONLY)
+    defer delete(path)
     
     // TODO: handle error
     
@@ -117,9 +118,13 @@ auto_register_assets :: proc(ctx: ^Asset_Context, path: string) {
         name := strings.join(name_parts, ".")
         
         relative_path := strings.join([]string{path, entry.name}, "/")
+        defer delete(name_parts)
         
         register_asset(ctx, name, relative_path)
+
+        os.file_info_delete(entry)
     }
+    delete(fi)
 }
 
 get_asset_register :: proc(ctx: ^Asset_Context, asset: ^Asset) -> ^Asset_Type_Register {

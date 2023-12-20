@@ -28,6 +28,7 @@ Entity :: struct {
     id: Entity_Id,
     layer: Layers,
     ctx: ^Entity_Context,
+    allocator: runtime.Allocator
 }
 
 Component_Data :: struct {
@@ -101,8 +102,12 @@ make_entity :: proc(ctx: ^Entity_Context, layer: Layers = Layers.World) -> ^Enti
     entity:= new(Entity)
     entity.id = ctx.next_id
     entity.ctx = ctx
-    entity.layer = layer // Default layer
+    entity.layer = layer
     ctx.next_id += 1
+
+    track: mem.Tracking_Allocator
+    mem.tracking_allocator_init(&track, context.allocator)
+    entity.allocator = mem.tracking_allocator(&track)
 
     // Add the default components
     transform := get_component(entity, Transformation)
@@ -118,8 +123,24 @@ make_entity :: proc(ctx: ^Entity_Context, layer: Layers = Layers.World) -> ^Enti
 free_entity :: proc(entity: ^Entity) {
     for type in entity.ctx.components {
        if entity.id in entity.ctx.components[type] {
-            key, value:= delete_key(&entity.ctx.components[type], entity.id)
-            free(value.data)
+            comp:= &entity.ctx.components[type][entity.id]
+
+            // Check if comp is Sprite_Collection
+            if type == Sprite_Collection {
+                sprite_collection := cast(^Sprite_Collection)comp.data
+                delete(sprite_collection.textures)
+                free(&sprite_collection)
+            }
+
+            if type == Cooldowns {
+                cooldowns := cast(^Cooldowns)comp.data
+                delete(cooldowns.cooldowns)
+                free(&cooldowns)
+            }
+
+            free(comp.data)
+            free(comp)
+            delete_key(&entity.ctx.components[type], entity.id)
         }
     }
 

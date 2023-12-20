@@ -119,6 +119,7 @@ main :: proc() {
             // Draw total memory usage
             mem_total := 0
             for _, entry in track.allocation_map {
+                fmt.println(entry)
                 mem_total += entry.size
             }
 
