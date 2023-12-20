@@ -122,11 +122,13 @@ make_entity :: proc(ctx: ^Entity_Context, layer: Layers = Layers.World) -> ^Enti
 
 free_entity :: proc(entity: ^Entity) {
     // TODO: This is a bit of a mess, we need to clean this up
-    
+    // TODO: A custom Allocator for entities would be nice
+
     for type in entity.ctx.components {
        if entity.id in entity.ctx.components[type] {
             comp:= &entity.ctx.components[type][entity.id]
 
+            // TODO: I dont want to iterate over all the components here and call thier on delete/free procs
             // Check if comp is Sprite_Collection
             if type == Sprite_Collection {
                 sprite_collection := cast(^Sprite_Collection)comp.data
