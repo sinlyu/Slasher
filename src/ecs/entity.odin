@@ -121,6 +121,8 @@ make_entity :: proc(ctx: ^Entity_Context, layer: Layers = Layers.World) -> ^Enti
 }
 
 free_entity :: proc(entity: ^Entity) {
+    // TODO: This is a bit of a mess, we need to clean this up
+    
     for type in entity.ctx.components {
        if entity.id in entity.ctx.components[type] {
             comp:= &entity.ctx.components[type][entity.id]
