@@ -126,9 +126,15 @@ vec2_dir :: proc(a: raylib.Vector2) -> raylib.Vector2 {
     return raylib.Vector2{a.x / magnitude, a.y / magnitude}
 }
 
-vec2_rnd :: proc(max: f32 = 10) -> raylib.Vector2 {
+vec2_rnd :: proc(max: f32) -> raylib.Vector2 {
     x:= rand.float32() * max
     y:= rand.float32() * max
+    return raylib.Vector2{x, y}
+}
+
+vec2_rnd_range :: proc(min, max: f32) -> raylib.Vector2 {
+    x:= rand.float32_range(min, max)
+    y:= rand.float32_range(min, max)
     return raylib.Vector2{x, y}
 }
 

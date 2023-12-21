@@ -88,3 +88,21 @@ update_physics :: proc(ctx: ^engine.Game_Context, entity: ^ecs.Entity) {
     // Draw Point
     raylib.DrawCircleV(raylib.Vector2{center_x, center_y}, 2, raylib.GREEN)
 }
+
+hitbox_intersects :: proc(a: ^ecs.Entity, b: ^ecs.Entity) -> bool {
+    using ecs
+
+    a_center_x := a.transform_position.x + a.transform_origin.x + 2
+    a_center_y := a.transform_position.y + a.transform_origin.y - 30
+
+    b_center_x := b.transform_position.x + b.transform_origin.x + 2
+    b_center_y := b.transform_position.y + b.transform_origin.y - 30
+
+    a_hitbox_x := a_center_x - a.hitbox_width / 2
+    a_hitbox_y := a_center_y - a.hitbox_height / 2
+
+    b_hitbox_x := b_center_x - b.hitbox_width / 2
+    b_hitbox_y := b_center_y - b.hitbox_height / 2
+
+    return raylib.CheckCollisionRecs(raylib.Rectangle{a_hitbox_x, a_hitbox_y, a.hitbox_width, a.hitbox_height}, raylib.Rectangle{b_hitbox_x, b_hitbox_y, b.hitbox_width, b.hitbox_height})
+}

@@ -106,7 +106,7 @@ main :: proc() {
         if IsMouseButtonPressed(MouseButton.RIGHT) {
             if entity != nil {
                 // Whack entity randomly
-                physics_apply_force(entity, vec2_rnd(10000))
+                physics_apply_force(entity, vec2_rnd_range(-10000, 10000))
             }
         }
 
