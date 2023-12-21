@@ -10,7 +10,7 @@ ASSET_PATH :: "assets"
 
 Asset_Context :: struct {
     assets: map[string]^Asset,
-    asset_type_registers: map[string]Asset_Type_Register,
+    asset_type_registers: map[string]^Asset_Type_Register,
     texture_cache: map[string][dynamic]^raylib.Texture2D
 }
 
@@ -30,7 +30,7 @@ Asset_Type_Register :: struct {
     extension: string,
     type: typeid,
     asset_type: Asset_Type,
-    load_callback: proc(asset: ^Asset) -> runtime.Raw_Any
+    load_callback: proc(asset: ^Asset) -> ^runtime.Raw_Any
 }
 
 init_asset_context :: proc() -> Asset_Context {
@@ -44,7 +44,7 @@ init_asset_context :: proc() -> Asset_Context {
 }
 
 register_asset_types :: proc(asset_context: ^Asset_Context) {
-    asset_context.asset_type_registers = make(map[string]Asset_Type_Register)
+    asset_context.asset_type_registers = make(map[string]^Asset_Type_Register)
     
     // Image formats
     register_asset_type(asset_context, "png", Asset_Type.TEXTURE, load_image_asset)
@@ -54,11 +54,11 @@ register_asset_types :: proc(asset_context: ^Asset_Context) {
 }
 
 register_asset_type :: proc(asset_context: ^Asset_Context, extension: string, asset_type: Asset_Type, load_callback: proc(asset: ^Asset) -> $T) {
-    asset_type_register := Asset_Type_Register{}
+    asset_type_register, err := new(Asset_Type_Register)
     asset_type_register.name = extension
     asset_type_register.extension = extension
     asset_type_register.asset_type = asset_type
-    asset_type_register.load_callback = cast(proc(asset: ^Asset) -> runtime.Raw_Any)load_callback
+    asset_type_register.load_callback = load_callback
 
     // Handle types
     // TODO: find a better way to do this
@@ -106,11 +106,6 @@ auto_register_assets :: proc(ctx: ^Asset_Context, path: string) {
             continue
         }
 
-        // Skip files without a name
-        if strings.index(entry.name, ".") == 0 {
-            continue
-        }
-
         // Remove the extension from the name
         name_parts := strings.split(entry.name, ".")
         // Remove last part
@@ -121,7 +116,6 @@ auto_register_assets :: proc(ctx: ^Asset_Context, path: string) {
         defer delete(name_parts)
         
         register_asset(ctx, name, relative_path)
-
         os.file_info_delete(entry)
     }
     delete(fi)
@@ -131,9 +125,10 @@ get_asset_register :: proc(ctx: ^Asset_Context, asset: ^Asset) -> ^Asset_Type_Re
    file_parts := strings.split(asset.path, ".")
    extension := file_parts[len(file_parts) - 1]
    defer delete(file_parts)
-   
+
    asset_type_register := ctx.asset_type_registers[extension]
-   return &asset_type_register
+   delete(extension)
+   return asset_type_register
 }
 
 load_asset :: proc(ctx: ^Asset_Context, name: string, $T: typeid) -> ^T {
@@ -147,7 +142,7 @@ load_asset :: proc(ctx: ^Asset_Context, name: string, $T: typeid) -> ^T {
     asset_type_register := get_asset_register(ctx, asset)
     asset_data := asset_type_register.load_callback(asset)
 
-    asset.data = asset_data
+    asset.data = asset_data^
     asset.loaded = true
     return cast(^raylib.Texture2D)&asset.data
 }
@@ -163,8 +158,8 @@ filter_assets :: proc(ctx: ^Asset_Context, asset_type: Asset_Type, query: string
     return assets
 }
 
-load_image_asset :: proc(asset: ^Asset) -> raylib.Texture2D {
+load_image_asset :: proc(asset: ^Asset) -> ^runtime.Raw_Any {
     texture := raylib.LoadTexture(strings.unsafe_string_to_cstring(asset.path))
     asset.loaded = true
-    return texture
+    return cast(^runtime.Raw_Any)&texture
 }

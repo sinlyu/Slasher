@@ -86,7 +86,7 @@ main :: proc() {
         if IsMouseButtonPressed(MouseButton.RIGHT) {
             if entity != nil {
                 // Whack entity randomly
-                physics_apply_force(entity, vec2_rnd(500000))
+                physics_apply_force(entity, vec2_rnd(10000))
             }
         }
 
@@ -198,7 +198,7 @@ make_skeleton :: proc(entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_C
     physics.max_velocity = 100
     physics.acceleration = vec2_zero()
     physics.friction = 0.9
-    physics.mass = 100
+    physics.mass = 50
 
     //ecs.debug_set_component(skeleton, ecs.Base_Texture, true)
     return skeleton

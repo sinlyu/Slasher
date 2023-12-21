@@ -128,7 +128,7 @@ free_entity :: proc(entity: ^Entity) {
        if entity.id in entity.ctx.components[type] {
             comp:= &entity.ctx.components[type][entity.id]
 
-            // TODO: I dont want to iterate over all the components here and call thier on delete/free procs
+            // TODO: I dont want to iterate over all the components here and call thier own delete/free procs
             // Check if comp is Sprite_Collection
             if type == Sprite_Collection {
                 sprite_collection := cast(^Sprite_Collection)comp.data
