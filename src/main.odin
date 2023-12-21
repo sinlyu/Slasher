@@ -56,6 +56,20 @@ main :: proc() {
 
     load_many_sprites(asset_ctx, "skeleton_default_walk_E_0.")
     load_many_sprites(asset_ctx, "skeleton_default_walk_N_90.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_NNW_112.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_W_180.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_NE_45.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_NEE_22.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_SSE_292.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_NNE_67.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_NW_135.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_NWW_157.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_SE_315.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_SEE_337.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_S_270.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_SSW_247.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_SW_225.")
+    load_many_sprites(asset_ctx, "skeleton_default_walk_SWW_202.")
 
     HideCursor()
     
@@ -72,11 +86,12 @@ main :: proc() {
 
         for entity, i in entity_ctx.entities {
             if cast(i32)i >= entity_ctx.next_id { continue }
-            update_sprite_collection(&game_ctx, &entity_ctx.entities[i])
-            update_sprite(&game_ctx, &entity_ctx.entities[i])
-            update_health(&game_ctx, &entity_ctx.entities[i])
-            draw_health(&game_ctx, &entity_ctx.entities[i])
-            update_physics(&game_ctx, &entity_ctx.entities[i])
+            ent_ptr := &entity_ctx.entities[i]
+            update_sprite_collection(&game_ctx, ent_ptr)
+            update_sprite(&game_ctx, ent_ptr)
+            update_health(&game_ctx, ent_ptr)
+            draw_health(&game_ctx, ent_ptr)
+            update_physics(&game_ctx, ent_ptr)
         }
 
         if IsMouseButtonPressed(MouseButton.LEFT) {
@@ -177,11 +192,16 @@ make_skeleton :: proc(entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_C
     add_and_load_sprite_collection(asset_ctx, entity, "skeleton_default_walk_E_0.", 100)
     entity.transform_position = raylib.Vector2{ x - entity.transform_origin.x, y - entity.transform_origin.y }
 
+    entity.hitbox_height = 80
+    entity.hitbox_width = 40
+
     entity.physics_velocity = vec2_zero()
     entity.physics_max_velocity = 100
     entity.physics_acceleration = vec2_zero()
     entity.physics_friction = 0.9
     entity.physics_mass = 50
+
+    entity.debug = false
 
     return entity
 }

@@ -60,7 +60,7 @@ update_physics :: proc(ctx: ^engine.Game_Context, entity: ^ecs.Entity) {
             sb := strings.builder_make()
             defer strings.builder_destroy(&sb)
             fmt.sbprintf(&sb, "skeleton_default_walk_%s_%v.", best_frame_name, cast(i32)best_match_angle)
-            change_sprite_collection_items(entity, load_many_sprites(&asset_ctx, strings.to_string(sb)))
+            change_sprite_collection_items(entity, get_many_sprites(&asset_ctx, strings.to_string(sb)))
         }
     }
 
@@ -70,8 +70,21 @@ update_physics :: proc(ctx: ^engine.Game_Context, entity: ^ecs.Entity) {
     screen_height:= cast(f32)raylib.GetScreenHeight()
 
     // Check if entity is off screen and wrap it around
-    if entity_pos.x < 0 { entity.transform_position.x = entity.transform_position.x + entity.transform_origin.x - screen_width }
+    if entity_pos.x < -entity.transform_origin.x { entity.transform_position.x = screen_width + entity.transform_origin.x }
     if entity_pos.x > screen_width { entity.transform_position.x = -entity.transform_origin.x }
-    if entity_pos.y < 0 { entity.transform_position.y = screen_height + entity.transform_origin.y }
+    if entity_pos.y < -entity.transform_origin.y { entity.transform_position.y = screen_height + entity.transform_origin.y }
     if entity_pos.y > screen_height { entity.transform_position.y = -entity.transform_origin.y }
+
+
+    // Draw Hitbox
+    center_x := entity.transform_position.x + entity.transform_origin.x + 2
+    center_y := entity.transform_position.y + entity.transform_origin.y - 30
+
+    hitbox_x := center_x - entity.hitbox_width / 2
+    hitbox_y := center_y - entity.hitbox_height / 2
+
+    raylib.DrawRectangleLinesEx(raylib.Rectangle{hitbox_x, hitbox_y, entity.hitbox_width, entity.hitbox_height}, 1, raylib.RED)
+
+    // Draw Point
+    raylib.DrawCircleV(raylib.Vector2{center_x, center_y}, 2, raylib.GREEN)
 }

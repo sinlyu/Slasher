@@ -17,7 +17,7 @@ add_and_load_sprite_collection :: proc(asset_ctx: ^asset.Asset_Context, entity: 
     entity.sprite_collection_frame_time = frame_time
 
     // Allocate the textures array
-    entity.sprite_collection_textures = make([dynamic]^raylib.Texture2D, len(filtered_assets))
+    entity.sprite_collection_textures = make([]^raylib.Texture2D, len(filtered_assets))
     entity.sprite_collection_frame_count = cast(i32)len(filtered_assets)
 
     // Load all the textures
@@ -36,20 +36,18 @@ add_and_load_sprite_collection :: proc(asset_ctx: ^asset.Asset_Context, entity: 
     }
 }
 
-load_many_sprites :: proc(asset_ctx: ^asset.Asset_Context, prefix: string) -> [dynamic]^raylib.Texture2D {
-    using asset
-
-    fmt.println("Loading sprites: ", prefix)
-
-    // Check if we already have the textures loaded
-    if asset_ctx.texture_cache[prefix] != nil {
-        return asset_ctx.texture_cache[prefix]
+get_many_sprites :: proc(asset_ctx: ^asset.Asset_Context, prefix: string) -> []^raylib.Texture2D
+{
+    if asset_ctx.texture_cache[prefix] == nil {
+        fmt.println("No textures with prefix %s", prefix)
+        panic("get_many_sprites failed")
     }
 
-    fmt.println(asset_ctx.texture_cache[prefix])
-    fmt.println("Textures not cached, loading...")
+    return asset_ctx.texture_cache[prefix]
+}
 
-    textures := make([dynamic]^raylib.Texture2D)
+load_many_sprites :: proc(asset_ctx: ^asset.Asset_Context, prefix: string) {
+    using asset
 
      // Find all Assets with the prefix
      filtered_assets := filter_assets(asset_ctx, Asset_Type.TEXTURE, prefix)
@@ -57,20 +55,20 @@ load_many_sprites :: proc(asset_ctx: ^asset.Asset_Context, prefix: string) -> [d
          return a.name < b.name
      })
 
+     textures := make([]^raylib.Texture2D, len(filtered_assets))
+
       // Load all the textures
     for i := 0; i < len(filtered_assets); i+=1 {
         asset := filtered_assets[i]
         texture:= load_asset(asset_ctx, asset.name, raylib.Texture2D)
-        append(&textures, texture)
+        textures[i] = texture
     }
 
     // Cache the textures
     asset_ctx.texture_cache[prefix] = textures
-
-    return textures
 }
 
-change_sprite_collection_items :: proc(entity: ^Entity, textures: [dynamic]^raylib.Texture2D) {
+change_sprite_collection_items :: proc(entity: ^Entity, textures: []^raylib.Texture2D) {
     entity.sprite_collection_textures = textures
     entity.sprite_collection_frame_count = cast(i32)len(textures)
     entity.sprite_collection_frame_time = 100

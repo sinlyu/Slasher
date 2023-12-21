@@ -10,7 +10,7 @@ ASSET_PATH :: "assets"
 Asset_Context :: struct {
     assets: map[string]^Asset,
     asset_type_registers: map[string]^Asset_Type_Register,
-    texture_cache: map[string][dynamic]^raylib.Texture2D
+    texture_cache: map[string][]^raylib.Texture2D
 }
 
 Asset :: struct {
@@ -37,7 +37,7 @@ Asset_Type_Register :: struct {
 init_asset_context :: proc() -> Asset_Context {
     asset_context:= Asset_Context{}
     asset_context.assets = make(map[string]^Asset)
-    asset_context.texture_cache = make(map[string][dynamic]^raylib.Texture2D)
+    asset_context.texture_cache = make(map[string][]^raylib.Texture2D)
 
     register_asset_types(&asset_context)
     

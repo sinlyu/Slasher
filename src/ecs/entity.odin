@@ -39,7 +39,7 @@ Entity :: struct {
     physics_fixed_angle: f32,
     physics_angle: f32,
 
-    sprite_collection_textures: [dynamic]^raylib.Texture2D,
+    sprite_collection_textures: []^raylib.Texture2D,
     sprite_collection_frame_index: i32,
     sprite_collection_frame_count: i32,
     sprite_collection_frame_time: f32,
