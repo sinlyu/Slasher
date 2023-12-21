@@ -29,6 +29,8 @@ main :: proc() {
     asset_ctx := &game_ctx.asset_ctx
     entity_ctx := &game_ctx.entity_ctx
 
+    make_soa(Entity, 1024)
+
     register_asset(asset_ctx, "cursor_gauntlet_white", "assets/user_interface/cursor/cursor_gauntlet_white.png")
 
     // Skeleton

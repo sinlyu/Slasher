@@ -11,64 +11,48 @@ import "../helper"
 import "../asset"
 
 // TODO: Instead of Components lets do one big struct with all the components in it
+// We do an array for enemies, decorations, etc
+
+Entity :: struct {
+    id: i32,
+    layer: Layer,
+    debug: bool,
+    
+    current_health: i32,
+    max_health: i32,
+
+    base_texture: ^raylib.Texture2D,
+
+    hitbox_width: f32,
+    hitbox_height: f32,
+
+    transform_position: raylib.Vector2,
+    transform_origin: raylib.Vector2,
+    transform_rotation: f32,
+
+    cooldowns: map[string]Cooldown,
+
+    physics_velocity: raylib.Vector2,
+    physics_max_velocity: f32,
+    physics_acceleration: raylib.Vector2,
+    physics_friction: f32,
+    physics_mass: f32,
+    physics_fixed_angle: f32,
+    physics_angle: f32,
+}
 
 Entity_Id :: i32
 
-Layers :: enum u8 {
+Layer :: enum u8 {
     UI = 0,
     World = 1,
 }
 
 Entity_Context :: struct {
-    entities: [dynamic]^Entity,
+    entities: 1024[]Entity,
     components: map[typeid]map[Entity_Id]rawptr,
     next_id: Entity_Id,
     delta_time: f32
-}
-
-Entity :: struct {
-    id: Entity_Id,
-    layer: Layers,
-    ctx: ^Entity_Context,
-    allocator: runtime.Allocator
-}
-
-Component :: struct {
-    entity: ^Entity,
-    debug: bool,
-}
-
-Health :: struct {
-    using base: Component,
-    health: i32,
-    max_health: i32,
-}
-
-Sprite :: struct {
-    using base: Component,
-}
-
-Base_Texture :: struct {
-    using base: Component,
-    texture: ^raylib.Texture2D,
-}
-
-Hitbox :: struct {
-    using base: Component,
-    width: f32,
-    height: f32,
-}
-
-Transformation :: struct {
-    using base: Component,
-    pos: raylib.Vector2,
-    origin: raylib.Vector2,
-    rotation: f32,
-}
-
-Cooldowns :: struct {
-    using base: Component,
-    cooldowns: map[string]Cooldown,
 }
 
 Cooldown :: struct {
@@ -76,19 +60,6 @@ Cooldown :: struct {
     time: f64,
     last_used: f64,
 }
-
-Physics :: struct {
-    using base: Component,
-    velocity: raylib.Vector2,
-    max_velocity: f32,
-    acceleration: raylib.Vector2,
-    friction: f32,
-    mass: f32,
-    
-    fixed_angle: f32,
-    angle: f32,
-}
-
 
 init_entity_context :: proc() -> Entity_Context {
     entity_context := Entity_Context{}
@@ -102,13 +73,10 @@ make_entity :: proc(ctx: ^Entity_Context, layer: Layers = Layers.World) -> ^Enti
     entity.layer = layer
     ctx.next_id += 1
 
-    track: mem.Tracking_Allocator
+    /*track: mem.Tracking_Allocator
     mem.tracking_allocator_init(&track, context.allocator)
-    entity.allocator = mem.tracking_allocator(&track)
-
-    // Add the default components
-    transform := get_component(entity, Transformation)
-
+    entity.allocator = mem.tracking_allocator(&track)*/
+    
     append(&ctx.entities, entity)
 
     // We need to sort the entities by layer when we add a new one
@@ -118,55 +86,9 @@ make_entity :: proc(ctx: ^Entity_Context, layer: Layers = Layers.World) -> ^Enti
 }
 
 free_entity :: proc(entity: ^Entity) {
-    // TODO: This is a bit of a mess, we need to clean this up
-    // TODO: A custom Allocator for entities would be nice
 
-    for type in entity.ctx.components {
-       if entity.id in entity.ctx.components[type] {
-            comp:= &entity.ctx.components[type][entity.id]
-
-            // TODO: I dont want to iterate over all the components here and call thier own delete/free procs
-            // Check if comp is Sprite_Collection
-            if type == Sprite_Collection {
-                sprite_collection := cast(^Sprite_Collection)comp.data
-                // delete(sprite_collection.textures)
-            }
-
-            if type == Cooldowns {
-                cooldowns := cast(^Cooldowns)comp.data
-                // delete(cooldowns.cooldowns)
-            }
-
-            // free(comp.data)
-            // delete_key(&entity.ctx.components[type], entity.id)
-        }
-    }
-
-    // find index of entity in entities
-    entity_index := -1
-    for e, i in entity.ctx.entities {
-        if e.id == entity.id {
-            entity_index = i
-            break
-        }
-    }
-
-    if entity_index == -1 {
-        panic("Entity not found in entities slice")
-    }
-
-    // Remove from entites
-    ordered_remove(&entity.ctx.entities, entity_index)
-    free(entity)
 }
 
-
-make_hitbox :: proc(entity: ^Entity, width: f32, height: f32) {
-    hitbox := new(Hitbox)
-    hitbox.width = width
-    hitbox.height = height
-    add_component(entity, Hitbox)
-}
 
 sort_entites :: proc(ctx: ^Entity_Context) {
     using mem
@@ -175,103 +97,12 @@ sort_entites :: proc(ctx: ^Entity_Context) {
     })
 }
 
-add_component :: proc(entity: ^Entity, $T: typeid) {
-    components := &entity.ctx.components
-
-    if !(T in &entity.ctx.components) {
-        components[T] = make(map[Entity_Id]Component_Data)
-    }
-
-    specific_components := &entity.ctx.components[T]
-    specific_components[entity.id] = new_component(T, entity)
-}
-
-new_component :: proc($T: typeid, entity: ^Entity) -> rawptr {
-    using mem
-    component, err := new(T)
-    component.entity = entity
-    return component
-}
-
-get_component :: proc(entity: ^Entity, $T: typeid) -> ^T {
-    if !has_component(entity, T) {
-        add_component(entity, T)
-    }
-
-    component := &entity.ctx.components[T][entity.id]
-    return cast(^T)component.data
-}
-
-debug_set_component :: proc(entity: ^Entity, $T: typeid, debug: bool) {
-    if !has_component(entity, T) {
-        panic("[debug_set_component] Entity does not have that component!")
-    }
-
-    component := get_component(entity, T)
-    component.debug = debug
-}
-
-has_component :: proc(entity: ^Entity, $T: typeid) -> bool {
-    return T in entity.ctx.components && entity.id in entity.ctx.components[T]
-}
-
-// Helper procs based on components
-
-comp_width :: proc(entity: ^Entity) -> f32 {
-    if(!has_component(entity, Base_Texture)) {
-        panic("Entity does not have a Texture based component")
-    }
-
-    base_texture := get_component(entity, Base_Texture)
-    return helper.tex_width(base_texture.texture)
-
-    // TODO: Add a BoundingBox component
-}
-
-comp_height :: proc(entity: ^Entity) -> f32 {
-    if(!has_component(entity, Base_Texture)) {
-        panic("Entity does not have a Texture based component")
-    }
-
-    base_texture := get_component(entity, Base_Texture)
-    return helper.tex_height(base_texture.texture)
-
-    // TODO: Add a BoundingBox component
-}
-
-try_get_texture :: proc(entity: ^Entity) -> (bool, ^raylib.Texture2D) {
-    if !has_component(entity, Base_Texture) {
-        return false, nil
-    }
-    return true, get_component(entity, Base_Texture).texture
-}
-
-make_cooldowns :: proc(entity: ^Entity) -> ^Cooldowns {
-    cooldowns := get_component(entity, Cooldowns)
-    cooldowns.cooldowns = make(map[string]Cooldown)
-    return cooldowns
-}
-
 add_cooldown :: proc(entity: ^Entity, name: string, time: f64) {
-    if !has_component(entity, Cooldowns) {
-        panic("Entity does not have a Cooldowns component")
-    }
-
-    cooldowns := get_component(entity, Cooldowns)
-    cooldowns.cooldowns[name] = Cooldown{name, time, 0}
+    entity.cooldowns.cooldowns[name] = Cooldown{ name, time, 0 }
 }
 
 cooldown_use :: proc(entity: ^Entity, name: string) -> bool {
-    if !has_component(entity, Cooldowns) {
-        panic("Entity does not have a Cooldowns component")
-    }
-
-    cooldowns := get_component(entity, Cooldowns)
-    if !(name in cooldowns.cooldowns) {
-        panic("Entity does not have that cooldown")
-    }
-
-    cooldown := &cooldowns.cooldowns[name]
+    cooldown := &entity.cooldowns.cooldowns[name]
     time := raylib.GetTime()
 
     if time - cooldown.last_used < cooldown.time {
@@ -284,30 +115,15 @@ cooldown_use :: proc(entity: ^Entity, name: string) -> bool {
 }
 
 physics_apply_force :: proc(entity: ^Entity, force: raylib.Vector2) {
-    if !has_component(entity, Physics) {
-        panic("Entity does not have a Physics component")
-    }
-
-    physics := get_component(entity, Physics)
-    physics.acceleration = vec2_add(physics.acceleration, force)
+    entity.physics_acceleration = vec2_add(physics.acceleration, force)
 }
 
 physics_set_force :: proc(entity: ^Entity, force: raylib.Vector2) {
-    if !has_component(entity, Physics) {
-        panic("Entity does not have a Physics component")
-    }
-
-    physics := get_component(entity, Physics)
-    physics.acceleration = force * entity.ctx.delta_time
+    entity.physics_acceleration = force * entity.ctx.delta_time
 }
 
 physics_apply_friction :: proc(entity: ^Entity) {
-    if !has_component(entity, Physics) {
-        panic("Entity does not have a Physics component")
-    }
-
-    physics := get_component(entity, Physics)
-    physics.velocity = vec2_mul(physics.velocity, physics.friction)
+    entity.physics_velocity = vec2_mul(physics.velocity, physics.friction)
 }
 
 
