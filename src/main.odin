@@ -82,6 +82,7 @@ main :: proc() {
             entity = make_skeleton(entity_ctx, asset_ctx, cast(f32)GetMouseX(), cast(f32)GetMouseY())
         }
 
+        // TODO: Mouse button presses kills the frame rate
         if IsMouseButtonPressed(MouseButton.RIGHT) {
             if entity != nil {
                 // Whack entity randomly
