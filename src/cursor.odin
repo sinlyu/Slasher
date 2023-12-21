@@ -3,6 +3,7 @@ import "vendor:raylib"
 import "helper"
 import "ecs"
 import "asset"
+import "core:fmt"
 
 make_cursor :: proc (entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_Context) -> ^ecs.Entity
 {
@@ -16,6 +17,7 @@ make_cursor :: proc (entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_Co
     sprite:= get_component(cursor, Sprite)
     base_texture:= get_component(cursor, Base_Texture)
     base_texture.texture = texture
+
 
     return cursor
 }

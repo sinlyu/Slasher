@@ -16,15 +16,16 @@ main :: proc() {
     using systems
     using asset
 
-    track: mem.Tracking_Allocator
-    mem.tracking_allocator_init(&track, context.allocator)
-    context.allocator = mem.tracking_allocator(&track)
+    when ODIN_DEBUG {
+        track: mem.Tracking_Allocator
+        mem.tracking_allocator_init(&track, context.allocator)
+        context.allocator = mem.tracking_allocator(&track)
+    }
 
     width: i32 = 800
     height: i32 = 600
 
     game_ctx:= engine.init_game_context()
-
     asset_ctx := &game_ctx.asset_ctx
     entity_ctx := &game_ctx.entity_ctx
 
@@ -49,13 +50,11 @@ main :: proc() {
     auto_register_assets(asset_ctx, "assets/enemy/skeleton/skeleton_default_walk/W")
 
     InitWindow(width, height, "Slasher")
-
     cursor:= make_cursor(entity_ctx, asset_ctx)
 
     load_many_sprites(asset_ctx, "skeleton_default_walk_E_0.")
     load_many_sprites(asset_ctx, "skeleton_default_walk_N_90.")
 
-    SetTargetFPS(60)
 
     HideCursor()
     
@@ -119,7 +118,6 @@ main :: proc() {
             // Draw total memory usage
             mem_total := 0
             for _, entry in track.allocation_map {
-                fmt.println(entry)
                 mem_total += entry.size
             }
 
@@ -173,7 +171,10 @@ main :: proc() {
         EndDrawing()
     }
     
-    mem.tracking_allocator_destroy(&track)
+    when ODIN_DEBUG {
+        mem.tracking_allocator_destroy(&track)
+    }
+
     CloseWindow()
 }
 

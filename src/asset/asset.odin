@@ -83,9 +83,6 @@ register_asset :: proc (ctx: ^Asset_Context, name: string, path: string) -> ^Ass
 
 auto_register_assets :: proc(ctx: ^Asset_Context, path: string) {
     fd, err := os.open(path, os.O_RDONLY)
-    defer delete(path)
-    
-    // TODO: handle error
     
     defer os.close(fd)
     fi, err2 := os.read_dir(fd, 0)
@@ -113,10 +110,11 @@ auto_register_assets :: proc(ctx: ^Asset_Context, path: string) {
         name := strings.join(name_parts, ".")
         
         relative_path := strings.join([]string{path, entry.name}, "/")
-        defer delete(name_parts)
         
         register_asset(ctx, name, relative_path)
         os.file_info_delete(entry)
+
+        delete(name_parts)
     }
     delete(fi)
 }
@@ -124,10 +122,11 @@ auto_register_assets :: proc(ctx: ^Asset_Context, path: string) {
 get_asset_register :: proc(ctx: ^Asset_Context, asset: ^Asset) -> ^Asset_Type_Register {
    file_parts := strings.split(asset.path, ".")
    extension := file_parts[len(file_parts) - 1]
-   defer delete(file_parts)
 
    asset_type_register := ctx.asset_type_registers[extension]
-   delete(extension)
+   
+   delete(file_parts)
+ 
    return asset_type_register
 }
 
@@ -138,7 +137,7 @@ load_asset :: proc(ctx: ^Asset_Context, name: string, $T: typeid) -> ^T {
     if(asset.loaded) {
         return cast(^T)&asset.data
     }
-
+    
     asset_type_register := get_asset_register(ctx, asset)
     asset_data := asset_type_register.load_callback(asset)
 

@@ -133,17 +133,14 @@ free_entity :: proc(entity: ^Entity) {
             if type == Sprite_Collection {
                 sprite_collection := cast(^Sprite_Collection)comp.data
                 delete(sprite_collection.textures)
-                free(&sprite_collection)
             }
 
             if type == Cooldowns {
                 cooldowns := cast(^Cooldowns)comp.data
                 delete(cooldowns.cooldowns)
-                free(&cooldowns)
             }
 
             free(comp.data)
-            free(comp)
             delete_key(&entity.ctx.components[type], entity.id)
         }
     }
