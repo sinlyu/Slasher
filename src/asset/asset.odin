@@ -18,7 +18,7 @@ Asset :: struct {
     name: string,
     path: string,
     loaded: bool,
-    data: runtime.Raw_Any
+    data: any
 }
 
 Asset_Type :: enum {
@@ -30,7 +30,7 @@ Asset_Type_Register :: struct {
     extension: string,
     type: typeid,
     asset_type: Asset_Type,
-    load_callback: proc(asset: ^Asset) -> ^runtime.Raw_Any
+    load_callback: proc(asset: ^Asset) -> rawptr
 }
 
 init_asset_context :: proc() -> Asset_Context {
@@ -157,8 +157,8 @@ filter_assets :: proc(ctx: ^Asset_Context, asset_type: Asset_Type, query: string
     return assets
 }
 
-load_image_asset :: proc(asset: ^Asset) -> ^runtime.Raw_Any {
+load_image_asset :: proc(asset: ^Asset) -> rawptr {
     texture := raylib.LoadTexture(strings.unsafe_string_to_cstring(asset.path))
     asset.loaded = true
-    return cast(^runtime.Raw_Any)&texture
+    return &texture
 }

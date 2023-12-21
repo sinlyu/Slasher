@@ -19,7 +19,7 @@ Layers :: enum u8 {
 
 Entity_Context :: struct {
     entities: [dynamic]^Entity,
-    components: map[typeid]map[Entity_Id]Component_Data,
+    components: map[typeid]map[Entity_Id]rawptr,
     next_id: Entity_Id,
     delta_time: f32
 }
@@ -29,11 +29,6 @@ Entity :: struct {
     layer: Layers,
     ctx: ^Entity_Context,
     allocator: runtime.Allocator
-}
-
-Component_Data :: struct {
-    type: typeid,
-    data: ^runtime.Raw_Any,
 }
 
 Component :: struct {
@@ -132,16 +127,16 @@ free_entity :: proc(entity: ^Entity) {
             // Check if comp is Sprite_Collection
             if type == Sprite_Collection {
                 sprite_collection := cast(^Sprite_Collection)comp.data
-                delete(sprite_collection.textures)
+                // delete(sprite_collection.textures)
             }
 
             if type == Cooldowns {
                 cooldowns := cast(^Cooldowns)comp.data
-                delete(cooldowns.cooldowns)
+                // delete(cooldowns.cooldowns)
             }
 
-            free(comp.data)
-            delete_key(&entity.ctx.components[type], entity.id)
+            // free(comp.data)
+            // delete_key(&entity.ctx.components[type], entity.id)
         }
     }
 
@@ -189,11 +184,11 @@ add_component :: proc(entity: ^Entity, $T: typeid) {
     specific_components[entity.id] = new_component(T, entity)
 }
 
-new_component :: proc($T: typeid, entity: ^Entity) -> Component_Data {
+new_component :: proc($T: typeid, entity: ^Entity) -> rawptr {
     using mem
     component, err := new(T)
     component.entity = entity
-    return Component_Data{ T, cast(^runtime.Raw_Any)component }
+    return component
 }
 
 get_component :: proc(entity: ^Entity, $T: typeid) -> ^T {
