@@ -10,6 +10,8 @@ import "../raylib"
 import "../helper"
 import "../asset"
 
+// TODO: Instead of Components lets do one big struct with all the components in it
+
 Entity_Id :: i32
 
 Layers :: enum u8 {
