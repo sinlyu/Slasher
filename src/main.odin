@@ -25,6 +25,8 @@ main :: proc() {
     width: i32 = 800
     height: i32 = 600
 
+    SetTargetFPS(60)
+
     game_ctx:= engine.init_game_context()
     asset_ctx := &game_ctx.asset_ctx
     entity_ctx := &game_ctx.entity_ctx
@@ -69,9 +71,12 @@ main :: proc() {
         ClearBackground(RAYWHITE)
 
         for entity, i in entity_ctx.entities {
-            if cast(i32)i > entity_ctx.next_id { continue }
+            if cast(i32)i >= entity_ctx.next_id { continue }
             update_sprite_collection(&game_ctx, &entity_ctx.entities[i])
             update_sprite(&game_ctx, &entity_ctx.entities[i])
+            update_health(&game_ctx, &entity_ctx.entities[i])
+            draw_health(&game_ctx, &entity_ctx.entities[i])
+            update_physics(&game_ctx, &entity_ctx.entities[i])
         }
 
         if IsMouseButtonPressed(MouseButton.LEFT) {
@@ -82,7 +87,7 @@ main :: proc() {
             entity = make_skeleton(entity_ctx, asset_ctx, cast(f32)GetMouseX(), cast(f32)GetMouseY())
         }
 
-        // TODO: Mouse button presses kills the frame rate
+        // TODO: (Linux) Mouse button presses kills the frame rate
         if IsMouseButtonPressed(MouseButton.RIGHT) {
             if entity != nil {
                 // Whack entity randomly
@@ -123,41 +128,29 @@ main :: proc() {
                 mem_total += entry.size
             }
 
-            builder := strings.builder_make()
-
-            strings.builder_reset(&builder)
-            fmt.sbprintf(&builder, "Mem: %v KB", mem_total / 1024)
-            text:= strings.unsafe_string_to_cstring(strings.to_string(builder))
-            DrawText(text, 10, 10, 20, BLACK)
-            strings.builder_destroy(&builder)
+            mem:= TextFormat("Memory: %v KB", mem_total / 1024)
+            DrawText(mem, 10, 10, 20, BLACK)
+            delete(mem)
         
             // Draw delta time
-            strings.builder_reset(&builder)
-            fmt.sbprintf(&builder, "Delta: %v", delta_time)
-            text = strings.unsafe_string_to_cstring(strings.to_string(builder))
-            DrawText(text, 10, 30, 20, BLACK)
-            strings.builder_destroy(&builder)
+            delta_time:= TextFormat("Delta Time: %v", game_ctx.delta_time)
+            DrawText(delta_time, 10, 30, 20, BLACK)
+            delete(delta_time)
             
             // Draw asset count
-            strings.builder_reset(&builder)
-            fmt.sbprintf(&builder, "Assets: %v", len(asset_ctx.assets))
-            text = strings.unsafe_string_to_cstring(strings.to_string(builder))
-            DrawText(text, 10, 70, 20, BLACK)
-            strings.builder_destroy(&builder)
+            asset_count:= TextFormat("Assets: %v", len(asset_ctx.assets))
+            DrawText(asset_count, 10, 70, 20, BLACK)
+            delete(asset_count)
 
             // Draw Texture Map cache count
-            strings.builder_reset(&builder)
-            fmt.sbprintf(&builder, "Tex Cache: %v", len(asset_ctx.texture_cache))
-            text = strings.unsafe_string_to_cstring(strings.to_string(builder))
-            DrawText(text, 10, 90, 20, BLACK)
-            strings.builder_destroy(&builder)
+            tex_cache_count:= TextFormat("Tex Cache: %v", len(asset_ctx.texture_cache))
+            DrawText(tex_cache_count, 10, 90, 20, BLACK)
+            delete(tex_cache_count)
 
             // Draw FPS
-            strings.builder_reset(&builder)
-            fmt.sbprintf(&builder, "FPS: %v", GetFPS())
-            text = strings.unsafe_string_to_cstring(strings.to_string(builder))
-            DrawText(text, 10, 110, 20, BLACK)
-            strings.builder_destroy(&builder)
+            fps:= TextFormat("FPS: %v", GetFPS())
+            DrawText(fps, 10, 110, 20, BLACK)
+            delete(fps)
         }
 
         update_cursor(cursor);

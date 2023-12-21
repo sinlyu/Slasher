@@ -13,6 +13,8 @@ make_cursor :: proc (entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_Co
 
     entity:= make_entity(entity_ctx)
     entity.texture = load_asset(asset_ctx, "cursor_gauntlet_white", Texture2D)
+    entity.max_health = -1
+    entity.current_health = -1
 
     return entity
 }

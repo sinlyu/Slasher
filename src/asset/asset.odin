@@ -7,7 +7,6 @@ import "core:os"
 
 ASSET_PATH :: "assets"
 
-
 Asset_Context :: struct {
     assets: map[string]^Asset,
     asset_type_registers: map[string]^Asset_Type_Register,
@@ -18,8 +17,10 @@ Asset :: struct {
     name: string,
     path: string,
     loaded: bool,
-    data: any
+    data: Asset_Data
 }
+
+Asset_Data :: union { raylib.Texture2D }
 
 Asset_Type :: enum {
     TEXTURE,
@@ -30,7 +31,7 @@ Asset_Type_Register :: struct {
     extension: string,
     type: typeid,
     asset_type: Asset_Type,
-    load_callback: proc(asset: ^Asset) -> rawptr
+    load_callback: proc(asset: ^Asset) -> ^Asset_Data
 }
 
 init_asset_context :: proc() -> Asset_Context {
@@ -139,13 +140,12 @@ load_asset :: proc(ctx: ^Asset_Context, name: string, $T: typeid) -> ^T {
     }
     
     asset_type_register := get_asset_register(ctx, asset)
-
     asset_data := asset_type_register.load_callback(asset)
 
-    asset.data = cast(any)asset_data^
-    fmt.println(asset.data)
+    asset.data = asset_data^
+
     asset.loaded = true
-    return cast(^raylib.Texture2D)&asset.data
+    return cast(^T)&asset.data
 }
 
 filter_assets :: proc(ctx: ^Asset_Context, asset_type: Asset_Type, query: string) -> [dynamic]^Asset {
@@ -159,8 +159,8 @@ filter_assets :: proc(ctx: ^Asset_Context, asset_type: Asset_Type, query: string
     return assets
 }
 
-load_image_asset :: proc(asset: ^Asset) -> rawptr {
+load_image_asset :: proc(asset: ^Asset) -> ^Asset_Data {
     texture := raylib.LoadTexture(strings.unsafe_string_to_cstring(asset.path))
     asset.loaded = true
-    return &texture
+    return cast(^Asset_Data)&texture
 }
