@@ -15,13 +15,12 @@ import "../asset"
 
 Entity :: struct {
     id: i32,
-    layer: Layer,
     debug: bool,
     
     current_health: i32,
     max_health: i32,
 
-    base_texture: ^raylib.Texture2D,
+    texture: ^raylib.Texture2D,
 
     hitbox_width: f32,
     hitbox_height: f32,
@@ -39,20 +38,17 @@ Entity :: struct {
     physics_mass: f32,
     physics_fixed_angle: f32,
     physics_angle: f32,
-}
 
-Entity_Id :: i32
-
-Layer :: enum u8 {
-    UI = 0,
-    World = 1,
+    sprite_collection_textures: [dynamic]^raylib.Texture2D,
+    sprite_collection_frame_index: i32,
+    sprite_collection_frame_count: i32,
+    sprite_collection_frame_time: f32,
+    sprite_collection_current_time: f32,
 }
 
 Entity_Context :: struct {
-    entities: 1024[]Entity,
-    components: map[typeid]map[Entity_Id]rawptr,
-    next_id: Entity_Id,
-    delta_time: f32
+    entities: []Entity,
+    next_id: i32,
 }
 
 Cooldown :: struct {
@@ -63,25 +59,20 @@ Cooldown :: struct {
 
 init_entity_context :: proc() -> Entity_Context {
     entity_context := Entity_Context{}
+    entity_context.next_id = 0
+    entity_context.entities = make([]Entity, 1024)
     return entity_context
 }
 
-make_entity :: proc(ctx: ^Entity_Context, layer: Layers = Layers.World) -> ^Entity {
-    entity:= new(Entity)
+make_entity :: proc(ctx: ^Entity_Context) -> ^Entity {
+    entity:= &ctx.entities[ctx.next_id]
     entity.id = ctx.next_id
-    entity.ctx = ctx
-    entity.layer = layer
     ctx.next_id += 1
 
     /*track: mem.Tracking_Allocator
     mem.tracking_allocator_init(&track, context.allocator)
     entity.allocator = mem.tracking_allocator(&track)*/
     
-    append(&ctx.entities, entity)
-
-    // We need to sort the entities by layer when we add a new one
-    sort_entites(ctx)
-
     return entity
 }
 
@@ -89,20 +80,12 @@ free_entity :: proc(entity: ^Entity) {
 
 }
 
-
-sort_entites :: proc(ctx: ^Entity_Context) {
-    using mem
-    slice.sort_by(ctx.entities[:], proc(a, b: ^Entity) -> bool {
-        return a.layer > b.layer
-    })
-}
-
 add_cooldown :: proc(entity: ^Entity, name: string, time: f64) {
-    entity.cooldowns.cooldowns[name] = Cooldown{ name, time, 0 }
+    entity.cooldowns[name] = Cooldown{ name, time, 0 }
 }
 
 cooldown_use :: proc(entity: ^Entity, name: string) -> bool {
-    cooldown := &entity.cooldowns.cooldowns[name]
+    cooldown := &entity.cooldowns[name]
     time := raylib.GetTime()
 
     if time - cooldown.last_used < cooldown.time {
@@ -115,15 +98,16 @@ cooldown_use :: proc(entity: ^Entity, name: string) -> bool {
 }
 
 physics_apply_force :: proc(entity: ^Entity, force: raylib.Vector2) {
-    entity.physics_acceleration = vec2_add(physics.acceleration, force)
+    entity.physics_acceleration = vec2_add(entity.physics_acceleration, force)
 }
 
 physics_set_force :: proc(entity: ^Entity, force: raylib.Vector2) {
-    entity.physics_acceleration = force * entity.ctx.delta_time
+    delta_time:= raylib.GetFrameTime() * 1000
+    entity.physics_acceleration = force * delta_time
 }
 
 physics_apply_friction :: proc(entity: ^Entity) {
-    entity.physics_velocity = vec2_mul(physics.velocity, physics.friction)
+    entity.physics_velocity = vec2_mul(entity.physics_velocity, entity.physics_friction)
 }
 
 

@@ -9,46 +9,27 @@ import "../engine"
 frame_angles := [16]f32{0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5}
 frame_names := [16]string{"E", "NEE", "NE", "NNE", "N", "NNW", "NW", "NWW", "W", "SWW", "SW", "SSW", "S", "SSE", "SE", "SEE"}
 
-update_physics_system :: proc(ctx: ^engine.Game_Context) {
-    using ecs
-
-    entity_ctx := ctx.entity_ctx
-
-    if len(entity_ctx.components[Physics]) == 0 { return }
-
-    for entity_id, component_data in entity_ctx.components[Physics] {
-        physics:= cast(^Physics)component_data.data
-        update_physics(ctx, physics)
-    }
-}
-
-
-@(private)
-update_physics :: proc(ctx: ^engine.Game_Context, physics: ^ecs.Physics) {
+update_physics :: proc(ctx: ^engine.Game_Context, entity: ^ecs.Entity) {
     using ecs
 
     entity_ctx := ctx.entity_ctx
     asset_ctx := ctx.asset_ctx
 
-    entity := physics.entity
-    transform := get_component(entity, Transformation)
-    if transform == nil { panic("Physics component without Transform") }
-
-    delta_time := entity_ctx.delta_time / 100
-    real_acceleration := physics.acceleration / physics.mass
+    delta_time := ctx.delta_time / 100
+    real_acceleration := entity.physics_acceleration / entity.physics_mass
 
     // Apply velocity and acceleration and friction to position
-    physics.velocity = physics.velocity + real_acceleration // * delta_time
-    physics.velocity = physics.velocity * (1 / (1 + physics.friction * delta_time))
-    transform.pos = transform.pos + physics.velocity * delta_time
+    entity.physics_velocity = entity.physics_velocity + real_acceleration // * delta_time
+    entity.physics_velocity = entity.physics_velocity * (1 / (1 + entity.physics_friction * delta_time))
+    entity.transform_position = entity.transform_position + entity.physics_velocity * delta_time
 
-    physics.acceleration = vec2_zero()
+    entity.physics_acceleration = vec2_zero()
 
     // calc direction
-    dir := vec2_dir(physics.velocity)
+    dir := vec2_dir(entity.physics_velocity)
 
     // draw dir debug helper line
-    raylib.DrawLineEx(transform.pos + transform.origin, transform.pos + transform.origin + dir * 100, 2, raylib.RED)
+    raylib.DrawLineEx(entity.transform_position + entity.transform_origin, entity.transform_position + entity.transform_origin + dir * 100, 2, raylib.RED)
     angle := vec2_angle(dir)
 
     // angle to degrees
@@ -69,13 +50,12 @@ update_physics :: proc(ctx: ^engine.Game_Context, physics: ^ecs.Physics) {
         best_index += 1
     }
 
-    physics.angle = angle
+    entity.physics_angle = angle
 
-    if physics.fixed_angle != best_match_angle {    
-        physics.fixed_angle = best_match_angle
-        fmt.println(physics.fixed_angle)
+    if entity.physics_fixed_angle != best_match_angle {    
+        entity.physics_fixed_angle = best_match_angle
 
-        if has_component(entity, Sprite_Collection) {
+        if len(entity.sprite_collection_textures) > 0 {
             // update sprite direction
             sb := strings.builder_make()
             defer strings.builder_destroy(&sb)
@@ -84,15 +64,14 @@ update_physics :: proc(ctx: ^engine.Game_Context, physics: ^ecs.Physics) {
         }
     }
 
-    entity_pos := transform.pos + transform.origin
-
+    entity_pos:= entity.transform_position + entity.transform_origin
 
     screen_width:= cast(f32)raylib.GetScreenWidth()
     screen_height:= cast(f32)raylib.GetScreenHeight()
 
     // Check if entity is off screen and wrap it around
-    if entity_pos.x < 0 { transform.pos.x = transform.pos.x + transform.origin.x - screen_width }
-    if entity_pos.x > screen_width { transform.pos.x = -transform.origin.x }
-    if entity_pos.y < 0 { transform.pos.y = screen_height + transform.origin.y }
-    if entity_pos.y > screen_height { transform.pos.y = -transform.origin.y }
+    if entity_pos.x < 0 { entity.transform_position.x = entity.transform_position.x + entity.transform_origin.x - screen_width }
+    if entity_pos.x > screen_width { entity.transform_position.x = -entity.transform_origin.x }
+    if entity_pos.y < 0 { entity.transform_position.y = screen_height + entity.transform_origin.y }
+    if entity_pos.y > screen_height { entity.transform_position.y = -entity.transform_origin.y }
 }

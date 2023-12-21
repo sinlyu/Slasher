@@ -6,7 +6,8 @@ import "../drawing"
 Game_Context :: struct {
     entity_ctx: ecs.Entity_Context,
     asset_ctx: asset.Asset_Context,
-    draw_ctx: drawing.Draw_Context
+    draw_ctx: drawing.Draw_Context,
+    delta_time: f32,
 }
 
 init_game_context :: proc() -> Game_Context {

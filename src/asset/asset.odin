@@ -139,9 +139,11 @@ load_asset :: proc(ctx: ^Asset_Context, name: string, $T: typeid) -> ^T {
     }
     
     asset_type_register := get_asset_register(ctx, asset)
+
     asset_data := asset_type_register.load_callback(asset)
 
-    asset.data = asset_data^
+    asset.data = cast(any)asset_data^
+    fmt.println(asset.data)
     asset.loaded = true
     return cast(^raylib.Texture2D)&asset.data
 }

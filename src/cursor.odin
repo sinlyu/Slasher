@@ -11,14 +11,13 @@ make_cursor :: proc (entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_Co
     using ecs
     using asset
 
-    entity:= new_entity()
+    entity:= make_entity(entity_ctx)
     entity.texture = load_asset(asset_ctx, "cursor_gauntlet_white", Texture2D)
-    entity.layer = Layers.UI
 
     return entity
 }
 
-update_cursor :: proc (cursor: ^ecs.Entity)
+update_cursor :: proc (entity: ^ecs.Entity)
 {
     using helper
     using raylib

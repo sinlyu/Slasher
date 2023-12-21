@@ -29,8 +29,6 @@ main :: proc() {
     asset_ctx := &game_ctx.asset_ctx
     entity_ctx := &game_ctx.entity_ctx
 
-    make_soa(Entity, 1024)
-
     register_asset(asset_ctx, "cursor_gauntlet_white", "assets/user_interface/cursor/cursor_gauntlet_white.png")
 
     // Skeleton
@@ -57,24 +55,24 @@ main :: proc() {
     load_many_sprites(asset_ctx, "skeleton_default_walk_E_0.")
     load_many_sprites(asset_ctx, "skeleton_default_walk_N_90.")
 
-
     HideCursor()
     
     swap: bool = false
     delta_time: f32 = 0.0
 
     entity: ^Entity;
-    
+
     for !WindowShouldClose() {
-        entity_ctx.delta_time = GetFrameTime() * 1000
+        game_ctx.delta_time = GetFrameTime() * 1000
 
         BeginDrawing()
         ClearBackground(RAYWHITE)
-        
-        update_sprite_collection_system(entity_ctx)
-        update_sprite_system(entity_ctx)      
-        update_health_system(entity_ctx)
-        update_physics_system(&game_ctx)
+
+        for entity, i in entity_ctx.entities {
+            if cast(i32)i > entity_ctx.next_id { continue }
+            update_sprite_collection(&game_ctx, &entity_ctx.entities[i])
+            update_sprite(&game_ctx, &entity_ctx.entities[i])
+        }
 
         if IsMouseButtonPressed(MouseButton.LEFT) {
             if(entity != nil) {
@@ -116,6 +114,7 @@ main :: proc() {
             }
         }
 
+
         // Debug info
         when ODIN_DEBUG {
             // Draw total memory usage
@@ -137,13 +136,6 @@ main :: proc() {
             fmt.sbprintf(&builder, "Delta: %v", delta_time)
             text = strings.unsafe_string_to_cstring(strings.to_string(builder))
             DrawText(text, 10, 30, 20, BLACK)
-            strings.builder_destroy(&builder)
-
-            // Draw entity count
-            strings.builder_reset(&builder)
-            fmt.sbprintf(&builder, "Ents: %v", len(entity_ctx.entities))
-            text = strings.unsafe_string_to_cstring(strings.to_string(builder))
-            DrawText(text, 10, 50, 20, BLACK)
             strings.builder_destroy(&builder)
             
             // Draw asset count
@@ -169,7 +161,6 @@ main :: proc() {
         }
 
         update_cursor(cursor);
-
         
         EndDrawing()
     }
@@ -184,26 +175,20 @@ main :: proc() {
 make_skeleton :: proc(entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_Context, x: f32, y: f32) -> ^ecs.Entity {
     using ecs
     
-    skeleton:= make_entity(entity_ctx)
-    health:= get_component(skeleton, Health)
-    cooldowns:= make_cooldowns(skeleton)
-    add_cooldown(skeleton, "test", 0.1)
+    entity:= make_entity(entity_ctx)
+    add_cooldown(entity, "test", 0.1)
 
-    health.max_health = 100
-    health.health = 100
+    entity.current_health = 100
+    entity.max_health = 100
 
-    transform:= get_component(skeleton, Transformation)
-    add_and_load_sprite_collection(asset_ctx, skeleton, "skeleton_default_walk_E_0.", 100)
-    transform.pos = raylib.Vector2{ x - transform.origin.x, y - transform.origin.y }
+    add_and_load_sprite_collection(asset_ctx, entity, "skeleton_default_walk_E_0.", 100)
+    entity.transform_position = raylib.Vector2{ x - entity.transform_origin.x, y - entity.transform_origin.y }
 
-    physics:= get_component(skeleton, Physics)
+    entity.physics_velocity = vec2_zero()
+    entity.physics_max_velocity = 100
+    entity.physics_acceleration = vec2_zero()
+    entity.physics_friction = 0.9
+    entity.physics_mass = 50
 
-    physics.velocity = vec2_zero()
-    physics.max_velocity = 100
-    physics.acceleration = vec2_zero()
-    physics.friction = 0.9
-    physics.mass = 50
-
-    //ecs.debug_set_component(skeleton, ecs.Base_Texture, true)
-    return skeleton
+    return entity
 }
