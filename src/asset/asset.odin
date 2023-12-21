@@ -1,5 +1,5 @@
 package asset
-import "vendor:raylib"
+import "../raylib"
 import "core:fmt"
 import "core:strings"
 import "core:runtime"

@@ -1,5 +1,5 @@
 package main
-import "vendor:raylib"
+import "raylib"
 import "helper"
 import "ecs"
 import "asset"

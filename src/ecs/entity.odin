@@ -6,7 +6,7 @@ import "core:fmt"
 import "core:slice"
 import "core:math"
 import "core:math/rand"
-import "vendor:raylib"
+import "../raylib"
 import "../helper"
 import "../asset"
 

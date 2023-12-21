@@ -3,7 +3,7 @@ package main
 import "core:fmt"
 import "core:strings"
 import "core:mem"
-import "vendor:raylib"
+import "raylib"
 import "ecs"
 import "systems"
 import "asset"

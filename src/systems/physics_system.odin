@@ -2,7 +2,7 @@ package systems
 import "core:fmt"
 import "core:math"
 import "core:strings"
-import "vendor:raylib"
+import "../raylib"
 import "../ecs"
 import "../engine"
 

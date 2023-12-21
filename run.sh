@@ -1,2 +1,2 @@
 #!/bin/bash
-odin run ./src -out:./bin/blocks -debug
+odin run ./src -out:./bin/blocks -debug -o:speed

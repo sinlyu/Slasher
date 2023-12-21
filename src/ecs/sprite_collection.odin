@@ -1,5 +1,5 @@
 package ecs
-import "vendor:raylib"
+import "../raylib"
 import "../asset"
 import "core:fmt"
 import "core:slice"

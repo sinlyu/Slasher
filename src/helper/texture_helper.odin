@@ -1,5 +1,5 @@
 package helper
-import "vendor:raylib"
+import "../raylib"
 
 tex_multiplier :: proc() -> f32 {
     return 2.0;

@@ -1,6 +1,6 @@
 package systems
 import "core:fmt"
-import "vendor:raylib"
+import "../raylib"
 import "../ecs"
 import "../helper"
 

@@ -1,6 +1,6 @@
 package timing
 
-import "vendor:raylib"
+import "../raylib"
 
 Timer_Context :: struct {
     start : f64,
