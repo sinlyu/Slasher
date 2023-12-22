@@ -60,7 +60,7 @@ Cooldown :: struct {
 init_entity_context :: proc() -> Entity_Context {
     entity_context := Entity_Context{}
     entity_context.next_id = 0
-    entity_context.entities = make([]Entity, 1024)
+    entity_context.entities = make([]Entity, 102400)
     return entity_context
 }
 

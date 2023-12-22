@@ -25,7 +25,7 @@ main :: proc() {
     width: i32 = 800
     height: i32 = 600
 
-    SetTargetFPS(60)
+    SetTargetFPS(144)
 
     game_ctx:= engine.init_game_context()
     asset_ctx := &game_ctx.asset_ctx
@@ -98,8 +98,12 @@ main :: proc() {
             if(entity != nil) {
                 free_entity(entity)
             }
-
-            entity = make_skeleton(entity_ctx, asset_ctx, cast(f32)GetMouseX(), cast(f32)GetMouseY())
+            
+            for i in 0..100 {
+                // TODO: Draw Instanced (raylib): raylib.DrawMeshInstanced() 
+                entity = make_skeleton(entity_ctx, asset_ctx, cast(f32)GetMouseX(), cast(f32)GetMouseY())            
+            }
+            
         }
 
         // TODO: (Linux) Mouse button presses kills the frame rate
@@ -198,7 +202,7 @@ make_skeleton :: proc(entity_ctx: ^ecs.Entity_Context, asset_ctx: ^asset.Asset_C
     entity.physics_velocity = vec2_zero()
     entity.physics_max_velocity = 100
     entity.physics_acceleration = vec2_zero()
-    entity.physics_friction = 0.9
+    entity.physics_friction = 0.5
     entity.physics_mass = 50
 
     entity.debug = false
